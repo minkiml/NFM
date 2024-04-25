@@ -6,43 +6,69 @@ This repository is the official implementation of [Neural Fourier Space Modellin
 
 >📋  Optional: include a graphic explaining your approach/main result, bibtex entry, link to demos, blog posts and tutorials
 
-## Requirements
+## Getting started
+Clone the NFM repository via git as follows:
 
-To install requirements:
+```clone
+git clone ...
+```
+
+Then, install requirements as follows:
 
 ```setup
 pip install -r requirements.txt
 ```
 
->📋  Describe how to set up the environment, e.g. pip/conda/docker commands, download datasets, etc...
+<!-- There is a sub-folder for each task, under which you can find all task-specific codes, e.g., dataloaders, trainer, run scripts, etc.   -->
+### Some notes about the implementation 
+As presented in our main work, NFM can deal with different (explicitly accounting for the relation between inputs and outputs, which is a core principle to turn NFM into different learning modes, e.g., Forecasting, anomaly detection, classification, and so on) 
 
-## Training
+In the code, this is controlled by specifying m_t and m_f (during training or testing time) and accordingly applying to the model. 
+This is done by a class object that has and manages globally (see "var.py"). We also provide a demo on how to set up NFM for your own dataset and use in notebook... .
 
-To train the model(s) in the paper, run this command:
+## Datasets
+Download datasets from below links and place them in location you want. 
+Then, specify the location in the run scripts (in each sub-folder)
 
-```train
-python train.py --input-data <path_to_data> --alpha 10 --beta 20
+## Training & evaluation
+We have separated run scrips and main ... for each task.  
+
+Once you have downloaded the necessary datasets, you are all set to run the experiments.
+
+### Forecasting
+To train NFM on the conventional forecasting task (equal input and output resolution but different timespan), do
+```trainf
+sh ./Forecasting/scripts/ETTm.sh
 ```
+This will run NFM training on ETTm1 and ETTm2.
+The evaluation automatically follows after it.
+Note that, the .sh run script also contains "testing on different resolution outputs" which is also made after the evaluation on the conventional forecasting task. 
 
->📋  Describe how to train the models, with example commands on how to train the models in your paper, including the full training procedure and appropriate hyperparameters.
+Replace ETTm to others for training NFM on others.
 
-## Evaluation
+### Classification
+To train NFM for classification task on raw SpeechCommand, do 
 
-To evaluate my model on ImageNet, run:
-
-```eval
-python eval.py --model-file mymodel.pth --benchmark imagenet
+```trainc
+sh ./Classification/scripts/speechcommand_raw.sh 
 ```
+This also runs both training and evaluations, including normal scenario and different sampling rate scenario.  
 
->📋  Describe how to evaluate the trained models on benchmarks reported in the paper, give commands that produce the results (section below).
+To train NFM on MFCC, do 
+```trainc
+sh ./Classification/scripts/speechcommand.sh 
+```
+This also runs evaluations afterwards.
 
-## Pre-trained Models
+### Anomaly Detection
+To train NFM on anomaly detection task, do
+```traina
+sh ./AnomalyD/scripts/SMD.sh 
+```
+Replace SMD to others for training on others. 
 
-You can download pretrained models here:
-
-- [My awesome model](https://drive.google.com/mymodel.pth) trained on ImageNet using parameters x,y,z. 
-
->📋  Give a link to where/how the pretrained models can be downloaded and how they were trained (if applicable).  Alternatively you can have an additional column in your results table with a link to the models.
+Note that as mentioned in the main work, we found some flaws in the other's official implementation codes. 
+We provide fixed code samples (in ... ) that we used to replace their original ones and to run the implementation codes. 
 
 ## Results
 
