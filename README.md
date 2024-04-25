@@ -18,13 +18,8 @@ Then, install requirements as follows:
 ```setup
 pip install -r requirements.txt
 ```
-
+The current implementation uses a single GPU and provides no multiple GPU setup. 
 <!-- There is a sub-folder for each task, under which you can find all task-specific codes, e.g., dataloaders, trainer, run scripts, etc.   -->
-### Some notes about the implementation 
-As presented in our main work, NFM can deal with different (explicitly accounting for the relation between inputs and outputs, which is a core principle to turn NFM into different learning modes, e.g., Forecasting, anomaly detection, classification, and so on) 
-
-In the code, this is controlled by specifying m_t and m_f (during training or testing time) and accordingly applying to the model. 
-This is done by a class object that has and manages globally (see "var.py"). We also provide a demo on how to set up NFM for your own dataset and use in notebook... .
 
 ## Datasets
 Download datasets from below links and place them in location you want. 
@@ -40,11 +35,10 @@ To train NFM on the conventional forecasting task (equal input and output resolu
 ```trainf
 sh ./Forecasting/scripts/ETTm.sh
 ```
-This will run NFM training on ETTm1 and ETTm2.
-The evaluation automatically follows after it.
-Note that, the .sh run script also contains "testing on different resolution outputs" which is also made after the evaluation on the conventional forecasting task. 
-
-Replace ETTm to others for training NFM on others.
+- This will run NFM training on ETTm1 and ETTm2.
+- The evaluation automatically follows after it.
+- The .sh run script also contains "testing on different resolution outputs" which is also made after the evaluation on the conventional forecasting task. 
+- Replace ETTm to others for training NFM on others.
 
 ### Classification
 To train NFM for classification task on raw SpeechCommand, do 
@@ -53,6 +47,7 @@ To train NFM for classification task on raw SpeechCommand, do
 sh ./Classification/scripts/speechcommand_raw.sh 
 ```
 This also runs both training and evaluations, including normal scenario and different sampling rate scenario.  
+
 
 To train NFM on MFCC, do 
 ```trainc
@@ -82,6 +77,12 @@ Our model achieves the following performance on :
 
 >📋  Include a table of results from your paper, and link back to the leaderboard for clarity and context. If your main result is a figure, include that figure and link to the command or notebook to reproduce it. 
 
+
+## How to apply to your own dataset  
+As presented in our main work, NFM can deal with different (explicitly accounting for the relation between inputs and outputs, which is a core principle to turn NFM into different learning modes, e.g., Forecasting, anomaly detection, classification, and so on) 
+
+In the code, this is controlled by specifying m_t and m_f (during training or testing time) and accordingly applying to the model. 
+This is done by a class object that has and manages globally (see "var.py"). We also provide a demo on how to set up NFM for your own dataset and use in notebook... .
 
 ## Contributing
 
