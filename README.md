@@ -22,8 +22,16 @@ The current implementation uses a single GPU and provides no multiple GPU setup.
 <!-- There is a sub-folder for each task, under which you can find all task-specific codes, e.g., dataloaders, trainer, run scripts, etc.   -->
 
 ## Datasets
-Download datasets from below links and place them in location you want. 
-Then, specify the location in the run scripts (in each sub-folder)
+Download datasets from below links. 
+
+1. You can download all forecastubg datasets from [Autoformer](https://drive.google.com/drive/folders/1ZOYpTUa82_jCcxIdTmyr0LXQfvaM9vIy).
+
+2. For classification, running the experimental scripts (MFCC and raw) automaticall downloads the SpeechCommnad dataset and do necessary pre-process & formatting.
+
+3. For anomaly detection, all the used datasets can be downloaded from [Anomaly Transformer](https://drive.google.com/drive/folders/1gisthCoE-RrKJ0j3KPV7xiibhHWT9qRm).
+
+Create a seperate folder and save the downloaded datasets in the directory. Then, specify the location of datasets in the run scripts under each sub-folder.
+We examplify ones in ETTm1 and speechcommand run scripts.
 
 ## Training & evaluation
 We have separated run scrips and main ... for each task.  
