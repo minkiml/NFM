@@ -12,7 +12,6 @@ Clone the NFM repository via git as follows:
 ```clone
 git clone ...
 ```
->📋  Optional: 
 
 Then, install requirements as follows:
 
