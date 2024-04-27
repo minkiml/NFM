@@ -85,8 +85,13 @@ Our model achieves the following performance on :
 
 >📋  Include a table of results from your paper, and link back to the leaderboard for clarity and context. If your main result is a figure, include that figure and link to the command or notebook to reproduce it. 
 
+### Some findings from the forecasting experiments that may inspire one's future work.
+- A number of forecasting baselines are largely over-parameterized (). One interesting practice that is more and more often done is adopting a very "wide" prediction head (a potential structural demerit of chunk-to-chunk mapping). For example, more than 95% of PatchTST's parameters (~40K in backbone encoder vs ~8.3M in prediction head) belongs to the wide prediction head.
+Regarding this, we argue that it would be hard to ... since the wide prediction head may contribute too much ... . In NFM, the prediction head is nothing but feature-to-feature (timestep-to-timestep) mapping, thus the contribution of the prediction head is completely decoupled for learning temporal dependecy.  
 
-## How to apply to your own dataset  
+- We found a strong indication that the current forecasting models tend to focus more on global features (low frequency information) and less ... to local features (high frequency information) - See Appendix E.3 in our work.
+
+## How to use NFM for your own dataset and task
 As presented in our main work, NFM can deal with different (explicitly accounting for the relation between inputs and outputs, which is a core principle to turn NFM into different learning modes, e.g., Forecasting, anomaly detection, classification, and so on) 
 
 In the code, this is controlled by specifying m_t and m_f (during training or testing time) and accordingly applying to the model. 
