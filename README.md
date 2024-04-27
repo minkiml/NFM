@@ -26,7 +26,7 @@ Download datasets from below links.
 
 1. You can download all forecastubg datasets from [Autoformer](https://drive.google.com/drive/folders/1ZOYpTUa82_jCcxIdTmyr0LXQfvaM9vIy).
 
-2. For classification, running the experimental scripts (MFCC and raw) automaticall downloads the SpeechCommnad dataset and do necessary pre-process & formatting.
+2. For classification, running the experimental scripts (MFCC and raw) automaticall downloads the SpeechCommnad dataset and does necessary pre-process & formatting.
 
 3. For anomaly detection, all the used datasets can be downloaded from [Anomaly Transformer](https://drive.google.com/drive/folders/1gisthCoE-RrKJ0j3KPV7xiibhHWT9qRm).
 
