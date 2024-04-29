@@ -14,7 +14,7 @@ The following changes are made.
 Moreover, replace the test function in anomaly dectection solver script of the above implementations with the following [code](etc/modified_ad_eval.py).
 
 This makes the following changes.
-- Compute threshold using correct validation set and training set.
+- Compute anomaly threshold using correct validation set and training set.
 - Evaluate on correct testing set.   
 
 
