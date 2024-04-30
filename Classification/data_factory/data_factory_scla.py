@@ -3,7 +3,6 @@ import logging
 from torch.utils.data import DataLoader
 from Classification.data_factory.speech_dataset.speech_commands import SpeechCommands
 from Classification.data_factory.char_dataset.char_trajectories import CharTrajectories
-from Classification.data_factory.HAR_dataset.har_load import HAR
 from Classification.data_factory.UCR_dataset.ucr_load import UCR
 
 class classification_dataset(object):
@@ -12,7 +11,7 @@ class classification_dataset(object):
                 self, 
                 path = "",
                 sub_dataset = "SpeechCommands",
-                mod = "", # UCR
+                mod = "", # UCR #del
                 sr_train = 1,
                 sr_test = 1,
                 mfcc = 1,
@@ -48,9 +47,8 @@ class classification_dataset(object):
 
         dataset = {
             "SpeechCommands": SpeechCommands,
-            "CharTrajectories": CharTrajectories,
-            "UCR": UCR,
-            "HAR": HAR
+            "CharTrajectories": CharTrajectories, #del
+            "UCR": UCR #del
         }[self.sub_dataset]
 
         training_set = dataset(
@@ -75,7 +73,7 @@ class classification_dataset(object):
         )
         if self.sub_dataset in [
                 "SpeechCommands",
-                "CharTrajectories",
+                "CharTrajectories", #del
             ]:
             validation_set = dataset(
                 partition="val",

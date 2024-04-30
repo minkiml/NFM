@@ -42,12 +42,12 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--log_path", type=str, default='./Classification/Logs_/logs_', help="path to save all the products from each trainging")
     parser.add_argument("--id_", type=int, default=0, help="Run id")
-    parser.add_argument("--data_path", type=str, default='./data', help="path to grab data")
-    parser.add_argument("--description", type=str, default='', help="Experiment description if wanted (only optional)")
+    parser.add_argument("--data_path", type=str, default='./datasets/classification_data/default.csv', help="path to grab data")
+    parser.add_argument("--description", type=str, default='', help="optional")
     parser.add_argument("--dataset", type=str, default="SpeechCommands")
-    parser.add_argument('--mode', type=str, default='train', choices=['train', 'test', 'pretrain', 'finetune', "ct"])
-    parser.add_argument("--UCR", type=int, default=0, help = "UCR experiment")
-    parser.add_argument("--mod", type=str, default='Adiac')
+    parser.add_argument('--mode', type=str, default='train', choices=['train', 'test', 'pretrain', 'finetune', "ct"]) #del
+    parser.add_argument("--UCR", type=int, default=0, help = "UCR experiment") # del
+    parser.add_argument("--mod", type=str, default='Adiac') # del
     # Save path
     parser.add_argument('--model_save_path', type=str, default='checkpoints')
     parser.add_argument('--plots_save_path', type=str, default='plots')
@@ -61,21 +61,21 @@ if __name__ == '__main__':
     parser.add_argument("--batch_testing", type=int, default=32)
 
     # optimizer
-    parser.add_argument("--lr_", type=float, default=5e-4, help= "Peak learning rate")
-    parser.add_argument("--loss_type", type=str, default="TD", help= "TD: time domain loss, FD: Frequency domain loss, TFD: Mixture, TFDR")
-    parser.add_argument("--scheduler", type=int, default=0, help= "Whether to use optimizer scheduler for lr and wd")
+    parser.add_argument("--lr_", type=float, default=5e-4, help= "learning rate")
+    parser.add_argument("--loss_type", type=str, default="TFDR", help= "Not used unless one do reconstruction")
+    parser.add_argument("--scheduler", type=int, default=0)
     ### Scheduler params
     parser.add_argument("--warm_up", type=float, default=0.2, help="portion of warm up given number of epoches, e.g., 20 percent by defualt")
     parser.add_argument("--start_lr", type=float, default=1e-5, help="starting learning rate")
-    parser.add_argument("--ref_lr", type=float, default=1.5e-4, help= "Peak learning rate")
+    parser.add_argument("--ref_lr", type=float, default=1.5e-4, help= "peak learning rate")
     parser.add_argument("--final_lr", type=float, default=1e-5, help = "final learning rate")
-    parser.add_argument("--start_wd", type=float, default=0.0, help = "starting weight decay")
+    parser.add_argument("--start_wd", type=float, default=0.0, help = "starting weight decay. 0. means no decay")
     parser.add_argument("--final_wd", type=float, default=0.0, help = "fianl weight decay")
 
     # NFM params
     parser.add_argument("--std", type=float, default=0.04, help="std factor used for initialization")
-    parser.add_argument('--droppath', type=float, default=1.)  #
-    parser.add_argument('--input_c', type=int, default=7)  #
+    parser.add_argument('--droppath', type=float, default=1.)  #del
+    parser.add_argument('--input_c', type=int, default=7) 
     parser.add_argument("--hidden_dim", type=int, default=64)
     parser.add_argument("--final_hidden_dim", type=int, default=0, help = "Final feature-widening layer")
     parser.add_argument("--inff_siren_hidden", type=int, default=64)
@@ -83,9 +83,9 @@ if __name__ == '__main__':
     parser.add_argument("--hidden_factor", type=int, default=3)
     parser.add_argument("--layer_num", type=int, default=1)
     parser.add_argument("--dropout", type=float, default=0.3)
-    parser.add_argument("--revstat", type=int, default=1, help= "0 for False & 1 for True")
+    parser.add_argument("--revstat", type=int, default=1, help= "0 for False & 1 for True") #del
     parser.add_argument("--filter_type", type=str, default="INFF", choices=["INFF", "FNO", "AFNO", "GFN", "AFF"])
-    parser.add_argument("--learnable_adain", type=int, default=1)
+    parser.add_argument("--learnable_adain", type=int, default=1) #del
     # LFT (based on siren) params
     parser.add_argument("--lft", type=int, default=1)
     parser.add_argument("--siren_hidden", type=int, default=48)
@@ -99,7 +99,7 @@ if __name__ == '__main__':
     parser.add_argument("--mfcc", type=int, default=1, help="processed (1:True) or raw (0:False)") 
     parser.add_argument("--num_class", type=int, default=10)
     parser.add_argument("--multivariate", type=int, default=1, help = "1: True, 0: False (channel independent)")
-    parser.add_argument("--freq_span", type=int, default=50)
+    parser.add_argument("--freq_span", type=int, default=-1)
 
     # IN-Out for training
     parser.add_argument(
@@ -119,7 +119,7 @@ if __name__ == '__main__':
     config = parser.parse_args()
     ##########################################################
     ##########################################################
-    if config.UCR:
+    if config.UCR: #del
         list_of_datasets = LIST_OF_S #LIST_OF_INF
         config.log_path = config.log_path + "UCR" + "_" + f"{config.id_}"
         for i, dataset in enumerate(list_of_datasets):

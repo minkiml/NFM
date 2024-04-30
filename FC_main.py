@@ -40,18 +40,20 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--log_path", type=str, default='./Forecasting/Logs_/logs_', help="path to save all the products from each trainging")
     parser.add_argument("--id_", type=int, default=0, help="Run id")
-    parser.add_argument("--data_path", type=str, default='./data', help="path to grab data")
-    parser.add_argument("--description", type=str, default='', help="Experiment description if wanted (only optional)")
+    parser.add_argument("--data_path", type=str, default='./datasets/forecasting_data/default.csv', help="path to grab data")
+    parser.add_argument("--description", type=str, default='', help="optional desciption")
     parser.add_argument("--dataset", type=str, default="ETTm1", choices=["ETTh1", "ETTh2", "ETTm1", "ETTm2", "electricity", 
                                                                          "traffic", "weather"])
-    parser.add_argument("--model_type", type=str, default="NFM", choices=["NFM", "FITS", "WLinear"])
+    parser.add_argument("--model_type", type=str, default="NFM", choices=["NFM"]) # del
     parser.add_argument('--mode', type=str, default='train', choices=['train', 'test', 'ct'])
+
     # Save path
     parser.add_argument('--model_save_path', type=str, default='checkpoints')
     parser.add_argument('--plots_save_path', type=str, default='plots')
     parser.add_argument('--his_save_path', type=str, default='hist')
+
     # Training params
-    parser.add_argument("--plotting", type=int, default=0, help = "0: False and 1: True")
+    parser.add_argument("--plotting", type=int, default=0, help = "0: False and 1: True") # del
     parser.add_argument("--seed", type=int, default=55)
     parser.add_argument("--gpu_dev", type=str, default="6")
     parser.add_argument("--n_epochs", type=int, default=50)
@@ -59,22 +61,22 @@ if __name__ == '__main__':
     parser.add_argument("--batch_testing", type=int, default=32)
 
     # optimizer
-    parser.add_argument("--lr_", type=float, default=5e-4, help= "Peak learning rate")
-    parser.add_argument("--loss_type", type=str, default="TD", help= "TD: time domain loss, FD: Frequency domain loss, TFD: Mixture, TFDR")
+    parser.add_argument("--lr_", type=float, default=5e-4, help= "learning rate")
+    parser.add_argument("--loss_type", type=str, default="TFDR", help= "TD: time domain loss, FD: Frequency domain loss, TFD: Mixture, TFDR")
     parser.add_argument("--lamda", type=float, default=0.5, help = "lower puts more contriubtion from frequency loss")
-    parser.add_argument("--scheduler", type=int, default=0, help= "Whether to use optimizer scheduler for lr and wd")
+    parser.add_argument("--scheduler", type=int, default=0)
     ### Scheduler params
     parser.add_argument("--warm_up", type=float, default=0.2, help="portion of warm up given number of epoches, e.g., 20 percent by defualt")
     parser.add_argument("--start_lr", type=float, default=1e-5, help="starting learning rate")
-    parser.add_argument("--ref_lr", type=float, default=1.5e-4, help= "Peak learning rate")
+    parser.add_argument("--ref_lr", type=float, default=1.5e-4, help= "peak learning rate")
     parser.add_argument("--final_lr", type=float, default=1e-5, help = "final learning rate")
-    parser.add_argument("--start_wd", type=float, default=0., help = "starting weight decay")
+    parser.add_argument("--start_wd", type=float, default=0., help = "starting weight decay, setting it to 0. means no decay and decay scheduler")
     parser.add_argument("--final_wd", type=float, default=0., help = "fianl weight decay")
 
     # NFM params
     parser.add_argument("--std", type=float, default=0.04, help="std factor used for initialization")
-    parser.add_argument('--droppath', type=float, default=1)  #
-    parser.add_argument('--input_c', type=int, default=7)  #
+    parser.add_argument('--droppath', type=float, default=1)  # del
+    parser.add_argument('--input_c', type=int, default=7) 
     parser.add_argument("--hidden_dim", type=int, default=64, help = "dimension of hidden feature d")
     parser.add_argument("--final_hidden_dim", type=int, default=0, help = "Final feature-widening layer")
     parser.add_argument("--inff_siren_hidden", type=int, default=64)
@@ -82,23 +84,24 @@ if __name__ == '__main__':
     parser.add_argument("--hidden_factor", type=int, default=3)
     parser.add_argument("--layer_num", type=int, default=1)
     parser.add_argument("--dropout", type=float, default=0.3)
-    parser.add_argument("--revstat", type=int, default=1, help= "0 for False & 1 for True")
+    parser.add_argument("--revstat", type=int, default=1, help= "0 for False & 1 for True") # del
     parser.add_argument("--filter_type", type=str, default="INFF", choices=["INFF", "FNO", "AFNO", "GFN", "AFF"])
-    parser.add_argument("--learnable_adain", type=int, default=1)
+    parser.add_argument("--learnable_adain", type=int, default=1) # del
     # LFT (based on siren) params
     parser.add_argument("--lft", type=int, default=1)
     parser.add_argument("--siren_hidden", type=int, default=48)
-    parser.add_argument("--siren_in_dim", type=int, default=4)
+    parser.add_argument("--siren_in_dim", type=int, default=4, help = "This is also parameter for INFF")
     parser.add_argument("--siren_omega", type=float, default=30.)
     
     # Forecasting params
-    parser.add_argument("--freq_span", type=int, default=50)
+    parser.add_argument("--freq_span", type=int, default=-1, help = "cut-off frequency, i.e., Heuristic low pass filter. -1 means full span")
     parser.add_argument("--multivariate", type=int, default=1, help = "1: True, 0: False (channel independent)")
-    parser.add_argument("--look_back", type=int, default=144)
+    parser.add_argument("--look_back", type=int, default=720)
     parser.add_argument("--horizon", type=int, default=96)
-    parser.add_argument("--fullspan_pred", type=int, default=1)
-    parser.add_argument("--var_revin", type=int, default=1)
-    parser.add_argument("--head_type", type=str, default="time", help = "choose the domain where the prediction head operates (time domain or frequency domain)")
+    parser.add_argument("--fullspan_pred", type=int, default=1) # del
+    parser.add_argument("--var_revin", type=int, default=1) # del
+    parser.add_argument("--head_type", type=str, default="time", help = "choose the domain where the \
+                        prediction head operates (time domain or frequency domain)") # del
     # IN-Out for training
     parser.add_argument(
         "--vars_in_train",
@@ -112,7 +115,8 @@ if __name__ == '__main__':
         nargs='+',
         type=int,
         default=[360, 360, 180, 360],
-        help="A set of variables [Fs, F_in, L_out (horizon), L_in (lookback)] for formatting testing data. If same as 'vars_in_train' then, conventional scenario")
+        help="A set of variables [Fs, F_in, L_out (horizon), L_in (lookback)] \
+            for formatting testing data. If same as 'vars_in_train' then, conventional scenario")
 
     config = parser.parse_args()
     ##########################################################
