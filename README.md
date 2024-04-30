@@ -10,7 +10,7 @@ This repository is the official implementation of [Neural Fourier Space Modellin
 Clone the NFM repository via git as follows:
 
 ```clone
-git clone ...
+git clone https://github.com/minkiml/NFM.git
 ```
 
 Then, install requirements as follows:
