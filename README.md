@@ -9,6 +9,8 @@ Neural Fourier space modelling (NFM) which models time series directly in the Fo
 
 ![Overall workflow](images/workflow2.png)
 
+![Overall architecture](images/arch.png)
+
 Two aspects of DFT are extensively explored.
 1) DFT provides samples of "functional" representations of the time-domain discrete signals as a function of frequency, and explicitly leveraging this allows us to learn a function-to-function mapping (i.e., continuous-time) in a compact form.
 
@@ -18,8 +20,6 @@ Two aspects of DFT are extensively explored.
 We also introduces two learning modules.  
 - Learnable frequency tokens (LFTs) learn effective spectral priors and enable an efficient & flexible frequency extension with single parameterization.
 - Implicit Neural Fourier Filter (INFF) is a continous global convolution that is both instance-adaptive and mode-aware, improving the performance by considerable margin. 
-
-![Overall architecture](images/arch.png)
 
 ## Getting started
 Clone the NFM repository via git as follows:
