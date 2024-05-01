@@ -5,21 +5,21 @@
 This repository is the official implementation of [Neural Fourier Space Modelling for Time Series](https://arxiv.org/abs/2030.12345). 
 
 
-Neural Fourier space modelling (NFM) which models time series directly in the Fourier domain is a general time series solution to various time series problems. 
+Neural Fourier Space Modelling (NFM) which models time series directly in the Fourier domain is a compact and general solution to various time series problems. 
 
 ![Overall workflow](images/workflow2.png)
 
 ![Overall architecture](images/arch.png)
 
-Two aspects of DFT are extensively explored.
-1) DFT provides samples of "functional" representations of the time-domain discrete signals as a function of frequency, and explicitly leveraging this allows us to learn a function-to-function mapping (i.e., continuous-time) in a compact form.
+Two fundamental aspects of DFT are extensively explored.
+1) DFT provides samples of "functional" representations of the time-domain discrete signals as a function of frequency, and explicitly leveraging this allows learning a function-to-function mapping (i.e., continuous-time) in a compact form.
 
 2) Manipulating data (zero-padding/zero-interleaving) in the Fourier domain is equivalent to resampling and extending timespan of original discrete signals. We reinterpret it into Fourier extrapolation/interpolation and reformulate into a principal learning mechanism of NFM that provides flexible way of specializing NFM to various time series analysis without a need of single architectural modification.  
 
 
-We also introduces two learning modules.  
+We also introduce two learning modules.  
 - Learnable frequency tokens (LFTs) learn effective spectral priors and enable an efficient & flexible frequency extension with single parameterization.
-- Implicit Neural Fourier Filter (INFF) is a continous global convolution that is both instance-adaptive and mode-aware, improving the performance by considerable margin. 
+- Implicit Neural Fourier Filter (INFF) is a continous global convolution which is both instance-adaptive and mode-aware, improving the performance by notable margin. 
 
 ## Getting started
 Clone the NFM repository via git as follows:
