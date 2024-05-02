@@ -90,7 +90,7 @@ We provide fixed code samples (in ... ) that we used to replace their original o
 
 ## Main Results
 
-NFM achieves the following state-of-the-art performances with only **27k** (forecasting), **37k** (classification), and **7.8k** (anomaly detection) parameters and without a single architectural modification:
+NFM achieves the following state-of-the-art performances with only **27k** (forecasting), **37k** (classification), and **7.8k** (anomaly detection) parameters and *without a single architectural modification*:
 
 ### Forecasting
 
