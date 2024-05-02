@@ -28,4 +28,4 @@ Add the following [lines of code](modified_fore_dataload.py) to the dataloader o
 This applies downsampling followed by resampling through zero-padding in frequency domain (equivalent to applyng sinc kernel interpolation) to testing data only. 
 
 For FITS, we do not resample the downsampled inputs during data preparation. 
-Then, if the frequency of the downsampled inputs is shorter than the training cut-off frequency during inference time, we zero-pad the downsampled frequency up to the training cut-off frequency. 
+Then, if the frequency of the downsampled inputs is shorter than the training cut-off frequency during inference time, we zero-pad the shorter input frequency up to the training cut-off frequency.
