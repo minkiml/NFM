@@ -2,10 +2,11 @@
 
 # Neural Fourier Space Modelling for Time Series
 
-This repository is the official implementation of [Neural Fourier Space Modelling for Time Series](https://arxiv.org/abs/2030.12345). 
+This repository is the official implementation of Neural Fourier Space Modelling for Time Series.
+<!-- [Neural Fourier Space Modelling for Time Series](https://arxiv.org/abs/2030.12345).  -->
 
 
-Neural Fourier Space Modelling (NFM) which models time series directly in the Fourier domain is a compact and general solution to various time series problems. 
+Neural Fourier Space Modelling (NFM) which models time series directly in the Fourier domain is a compact and general solution to a range of time series problems. 
 
 ![Overall workflow](images/workflow2.png)
 
@@ -88,30 +89,35 @@ Replace SMD to others for training on others.
 Note that as mentioned in the main work, we found some flaws in the other's official implementation codes. 
 We provide fixed code samples (in ... ) that we used to replace their original ones and to run the implementation codes. 
 
-## Results
+## Main Results
 
-Our model achieves the following performance on :
+NFM achieves the following state-of-the-art performances with only **27k** (forecasting), **37k** (classification), and **7.8k** (anomaly detection) parameters and without a single architectural modification:
 
-### [Image Classification on ImageNet](https://paperswithcode.com/sota/image-classification-on-imagenet)
+### Forecasting
 
-| Model name         | Top 1 Accuracy  | Top 5 Accuracy |
-| ------------------ |---------------- | -------------- |
-| My awesome model   |     85%         |      95%       |
-
+Conventional setup (input and ouput resolution are the same)
 >📋  Include a table of results from your paper, and link back to the leaderboard for clarity and context. If your main result is a figure, include that figure and link to the command or notebook to reproduce it. 
 
-### Some findings from the forecasting experiment that may inspire one's future work
+...
+
+#### Some findings from the forecasting experiment that may inspire one's future work
 - A number of forecasting baselines are largely over-parameterized (). One interesting practice that is more and more often done in the community of time series forecasting is adopting a very "wide" prediction head (a potential structural demerit of chunk-to-chunk mapping). For example, more than 95% of PatchTST's parameters (~40K in backbone encoder vs ~8.3M in prediction head) belongs to the wide prediction head.
 Regarding this, we argue that it would be hard to ... since the wide prediction head may contribute too much ... . In NFM, the prediction head is nothing but feature-to-feature (timestep-to-timestep) mapping, thus the contribution of the prediction head is completely decoupled for learning temporal dependecy.  
 
 - We found a strong indication that the current forecasting models tend to focus more on global features (low frequency information) and less leverage on local features (high frequency information) as prediction horizon gets longer - See Appendix E.3 in our work. Working towards integrating a mechanism that lets models to utilize more of the local features could a good direction of study. 
 
-## How to use NFM for your own dataset and task
-As presented in our main work, NFM can deal with different (explicitly accounting for the relation between inputs and outputs, which is a core principle to turn NFM into different learning modes, e.g., Forecasting, anomaly detection, classification, and so on) 
+### Classification 
 
-In the code, this is controlled by specifying m_t and m_f (during training or testing time) and accordingly applying to the model. 
-This is done by a class object that has and manages globally (see "var.py"). We also provide a demo on how to set up NFM for your own dataset and use in notebook... .
+### Aomaly detection
+
+
+
+## How to use NFM for your own dataset and task
+We provide a short [demo](demo/simple_demo.ipynb) on how to apply NFM to one's own data and task.
 
 ## Citation
 If you cite our work, 
 >📋  Pick a licence and describe how to contribute to your code repository. 
+<!-- 
+## Contact
+If you have any queries, please email us (mkim332@aucklanduni.ac.nz). -->
