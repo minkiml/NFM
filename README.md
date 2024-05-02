@@ -5,7 +5,6 @@
 This repository is the official implementation of Neural Fourier Space Modelling for Time Series.
 <!-- [Neural Fourier Space Modelling for Time Series](https://arxiv.org/abs/2030.12345).  -->
 
-
 Neural Fourier Space Modelling (NFM) which models time series directly in the Fourier domain is a compact and general solution to a range of time series problems. 
 
 ![Overall workflow](images/workflow2.png)
@@ -13,7 +12,7 @@ Neural Fourier Space Modelling (NFM) which models time series directly in the Fo
 ![Overall architecture](images/arch.png)
 
 Two fundamental aspects of DFT are extensively explored.
-1) DFT provides samples of "functional" representations of the time-domain discrete signals as a function of frequency, and explicitly leveraging this allows learning a function-to-function mapping (i.e., continuous-time) in a compact form.
+1) DFT provides samples of "functional" representations of the time-domain discrete signals as a function of frequency, and explicitly leveraging this allows learning a function-to-function mapping in a compact form.
 
 2) Manipulating data (zero-padding/zero-interleaving) in the Fourier domain is equivalent to resampling and extending timespan of original discrete signals. We reinterpret it into Fourier extrapolation/interpolation and reformulate into a principal learning mechanism of NFM that provides flexible way of specializing NFM to various time series analysis without a need of single architectural modification.  
 
@@ -40,7 +39,7 @@ The current implementation uses a single GPU and provides no multiple GPU setup.
 ## Datasets
 Download datasets from below links. 
 
-1. You can download all forecastubg datasets from [Autoformer](https://drive.google.com/drive/folders/1ZOYpTUa82_jCcxIdTmyr0LXQfvaM9vIy).
+1. You can download all forecasting datasets from [Autoformer](https://drive.google.com/drive/folders/1ZOYpTUa82_jCcxIdTmyr0LXQfvaM9vIy).
 
 2. For classification, running the experimental scripts (MFCC and raw) automaticall downloads the SpeechCommnad dataset and does necessary pre-processing & formatting.
 
@@ -50,9 +49,9 @@ Create a seperate folder and save the downloaded datasets in the directory. Then
 We examplify ones in ETTm and speechcommand run scripts.
 
 ## Training & evaluation
-We have separated run scrips and main ... for each task.  
-
 Once you have downloaded the necessary datasets, you are all set to run the experiments.
+
+There are run scrips and main&solver separated for each task.  
 
 ### Forecasting
 To train NFM on the forecasting task, do
@@ -96,21 +95,21 @@ NFM achieves the following state-of-the-art performances with only **27k** (fore
 ### Forecasting
 
 Conventional setup (input and ouput resolution are the same)
->📋  Include a table of results from your paper, and link back to the leaderboard for clarity and context. If your main result is a figure, include that figure and link to the command or notebook to reproduce it. 
 
-...
 
-#### Some findings from the forecasting experiment that may inspire one's future work
-- A number of forecasting baselines are largely over-parameterized (). One interesting practice that is more and more often done in the community of time series forecasting is adopting a very "wide" prediction head (a potential structural demerit of chunk-to-chunk mapping). For example, more than 95% of PatchTST's parameters (~40K in backbone encoder vs ~8.3M in prediction head) belongs to the wide prediction head.
-Regarding this, we argue that it would be hard to ... since the wide prediction head may contribute too much ... . In NFM, the prediction head is nothing but feature-to-feature (timestep-to-timestep) mapping, thus the contribution of the prediction head is completely decoupled for learning temporal dependecy.  
 
-- We found a strong indication that the current forecasting models tend to focus more on global features (low frequency information) and less leverage on local features (high frequency information) as prediction horizon gets longer - See Appendix E.3 in our work. Working towards integrating a mechanism that lets models to utilize more of the local features could a good direction of study. 
+At different testing-time sampling rate
+
+
+
+- We found a strong indication that the current forecasting models tend to focus more on global features (low frequency information) and less leverage on local features (high frequency information) as prediction horizon gets longer - See Appendix E.3 in our work. 
 
 ### Classification 
+NFM works well on both pre-processed features (MFCC) and long raw waveform of 16k in length, yielding overall 2nd top-tier performance (in conventional setup) and the least performance degradation (at different testing-time sampling rate).
+
 
 ### Aomaly detection
-
-
+NFM shows effectiveness in anomaly detection task, surpassing the baselines on ....
 
 ## How to use NFM for your own dataset and task
 We provide a short [demo](demo/simple_demo.ipynb) on how to apply NFM to one's own data and task.

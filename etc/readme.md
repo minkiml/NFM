@@ -21,9 +21,7 @@ This makes the following changes.
 
 ## Forecasting
 
-For those who are willing to conduct the experiment of forecasting at different sampling rates in models like [PatchTST](https://github.com/yuqinie98/PatchTST) and [N-linear](https://github.com/cure-lab/LTSF-Linear), 
-
-Add the following [lines of code](modified_fore_dataload.py) to the dataloader of their original implementation.  
+To the best of our knowledge, the task of forecasting at different sampling rates is done for the first time in our work. For those who are willing to conduct the experiment and reproduce the results using models like [PatchTST](https://github.com/yuqinie98/PatchTST) and [N-linear](https://github.com/cure-lab/LTSF-Linear), add the following [lines of code](modified_fore_dataload.py) to the dataloader of their original implementation.  
 
 This applies downsampling followed by resampling through zero-padding in frequency domain (equivalent to applyng sinc kernel interpolation) to testing data only. 
 
