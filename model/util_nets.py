@@ -3,17 +3,26 @@ import torch
 import torch.nn as nn
 import torch.nn.init as init
 import numpy as np
-from model.norms import NormalizationLayer
 from model.utilities import (trunc_normal_, F_combine, clones, Permute)
 from utils.vars_ import HyperVariables
-class CV_projection(nn.Module):
+
+def Linear1d(
+    in_channels: int,
+    out_channels: int,
+    stride: int = 1,
+    bias: bool = True,
+) -> torch.nn.Module:
+    return nn.Conv1d(in_channels, out_channels, kernel_size=1, stride=stride, bias=bias)
+
+class CV_MLP(nn.Module):
     '''
-    Complex-valued vector projection
+    Complex-valued MLP
     '''
+    # TODO: tidy up this 
     def __init__(self, dim_in, dim_out, shared = False, bias = True, factor = 1, spec_out = None,
                  non_linearity = False, hidden=None, dropout = 0.2, std_ = 0.02,
                  nl_type = "GeLU"): 
-        super(CV_projection, self).__init__()     
+        super(CV_MLP, self).__init__()     
         self.f1 = dim_in
         if nl_type == "GLU":
             self.f2 = dim_in * 2 * factor
@@ -35,7 +44,7 @@ class CV_projection(nn.Module):
             self.projection_bias = nn.Parameter(torch.zeros(2, 1, 1, dim_out* factor if hidden is None else hidden))
         if non_linearity:
             if nl_type == "Identity":
-                self.nl = nn.Identity() # nn.ReLU() #nn.LeakyReLU(0.2) # ModReLU(False)
+                self.nl = nn.Identity()
             elif nl_type == "ReLU":
                 self.nl = nn.ReLU()
             elif nl_type == "GeLU":
@@ -52,7 +61,6 @@ class CV_projection(nn.Module):
                 self.imag_linear2 = Linear(self.f2, spec_out if spec_out is not None else dim_out, bias = False)
             if bias:
                 self.projection_bias2 = nn.Parameter(torch.zeros(2, 1, 1, spec_out if spec_out is not None else dim_out))
-        # self.dropout = nn.Dropout(dropout)
         self.weight_initalization()
     def forward(self, x):
         dim_ = x.dim()
@@ -68,12 +76,9 @@ class CV_projection(nn.Module):
         if self.bias:
             real_part = real_part + self.projection_bias[0] if dim_ == 3 else real_part + self.projection_bias[0].squeeze(0)
             imag_part = imag_part + self.projection_bias[1] if dim_ == 3 else imag_part + self.projection_bias[1].squeeze(0)
-
         if self.non_linearity:
             real_part = self.nl(real_part)
             imag_part = self.nl(imag_part)
-            # comp = self.nl(F_combine(real_part, imag_part))
-            # real_part, imag_part = comp.real, comp.imag
             if self.shared:
                 x_real_imag = torch.cat((real_part,imag_part), dim = 0)
                 x_real_imag = self.shared_linear2(x_real_imag)
@@ -87,31 +92,17 @@ class CV_projection(nn.Module):
                 imag_part2 = imag_part2 + self.projection_bias2[1] if dim_ == 3 else imag_part2 + self.projection_bias2[1].squeeze(0)
             return F_combine(real_part2, imag_part2)
         else: return F_combine(real_part, imag_part)
+
     def nn_initialization(self, m):
         if isinstance(m, nn.Linear):
             if m.weight is not None:
                 if self.std_ != 1.:    
                     pass
             if m.bias is not None:
-                print("conv_bias")
                 nn.init.zeros_(m.bias)   
     def weight_initalization(self):
-        for var, m in self.named_children():
-            if var == "shared_linear" or var == "real_linear" or var == "imag_linear": 
-                self.factor_norm = self.f1
-            elif var == "shared_linear2" or var == "real_linear2" or var == "imag_linear2":
-                self.factor_norm = self.f2         
+        for var, m in self.named_children():     
             m.apply(self.nn_initialization)
-def Linear1d(
-    in_channels: int,
-    out_channels: int,
-    stride: int = 1,
-    bias: bool = True,
-) -> torch.nn.Module:
-    """
-    A Linear Layer in terms of a point-wise convolution.
-    """
-    return nn.Conv1d(in_channels, out_channels, kernel_size=1, stride=stride, bias=bias)
     
 class PositionwiseFeedForward(nn.Module):
     "FFN"
@@ -147,10 +138,7 @@ class PositionwiseFeedForward(nn.Module):
     def forward(self, x):
         if self.type_ != "linear":
             x = x.permute(0,2,1)
-        # x = self.dropout(self.w_2(self.dropout(self.activation(self.w_1(x)))) )
-        # x = self.dropout(self.w_2(self.activation(self.w_1(x))) )
         x = self.w_2(self.dropout(self.activation(self.w_1(x))))
-
         if self.type_ != "linear":
             x = x.permute(0,2,1)
         return x
@@ -163,7 +151,6 @@ class PositionwiseFeedForward(nn.Module):
         if isinstance(m, (nn.Conv1d)):
             if m.weight is not None:
                 init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='leaky_relu')
-                print("FFT keiming init")
             if m.bias is not None:
                 nn.init.zeros_(m.bias)  
     def weight_initalization(self,layer_id = 1, init_ = 1):
@@ -204,7 +191,6 @@ class mul_omega(nn.Module):
         if gaussian:
             rand_ = torch.randn((1,1,feature_dim)) * 0.1
         else: rand_ = torch.zeros((1,1,feature_dim))
-        # self.omega = nn.Parameter((torch.randn((1,1,feature_dim)) * spectrum) * omega) if omega_learnable else omega
         self.omega = nn.Parameter((torch.rand((1,1,feature_dim))* rand_) * omega) if omega_learnable else omega
 
     def forward(self, x):
@@ -214,7 +200,7 @@ class Siren_block(nn.Module):
     '''
     Learnable frequency token based on SIREN ("Implicit Neural Representations with Periodic Activation Functions"
                                                   https://github.com/vsitzmann/siren/tree/master)
-    A purpose of learnable frequency token is to model rich prior about input sequences and add it to constructed fourier spectrum   
+    A purpose of learnable frequency token is to model rich prior about input sequences and to enable flexible frequency extension   
     '''
     def __init__(self, 
                     vars: HyperVariables,
@@ -240,8 +226,8 @@ class Siren_block(nn.Module):
         self.hidden_dim = hidden_dim
         self.layer_id = layer_id
         self.FF_mapping = fourier_mapping(ff_dim = siren_dim_in,  
-                                        ff_sigma=256, # 256
-                                        learnable_ff = True, # !!
+                                        ff_sigma=256,
+                                        learnable_ff = True, 
                                         ff_type = "gaussian", # deterministic_exp  gaussian
                                         L = self.hyper_var_siren.L_base)
         Linear = nn.Linear if type_ == "linear" else Linear1d
@@ -264,10 +250,10 @@ class Siren_block(nn.Module):
         self.siren_initialization()
     def forward(self, tc = None, B = 1, L = None, 
         dev = None):
-        t_len = self.hyper_var_siren.L_base if L is None else L # self.hyper_var_siren.L_span
+        t_len = self.hyper_var_siren.L_base if L is None else L 
         if tc is None:
             if self.ff_mapping == "naive":
-                t = self.FF_mapping(B, L=t_len).to(dev) # (B, L_base, d_model)
+                t = self.FF_mapping(B, L=t_len).to(dev) 
             elif self.ff_mapping == "ff":
                 t = self.FF_mapping(L=t_len, dev = dev)
         else: t = tc
@@ -285,12 +271,8 @@ class Siren_block(nn.Module):
                     if self.layer_id != 0:
                         # m.weight.data.div_(math.sqrt(2.0 * self.layer_id)) 
                         pass
-                    print("siren_init")
-                else:
-                    print("!!!")
             if m.bias is not None:
                 pass
-                # m.bias.data.zero_() 
         else: pass
     def init_midLayers(self, m):
         if isinstance(m, (nn.Linear, nn.Conv1d)):
@@ -302,10 +284,6 @@ class Siren_block(nn.Module):
                     if self.layer_id != 0:
                         # m.weight.data.div_(math.sqrt(2.0 * self.layer_id))
                         pass
-                    print("siren_init")
-                else:
-                    print("!!!")
-                pass
             if m.bias is not None:
                 pass
                 m.bias.data.zero_()   
@@ -319,21 +297,13 @@ class Siren_block(nn.Module):
                         np.sqrt(6.0 / self.dim_in) / (self.omega))
                     if self.layer_id != 0 and self.layer_id != 1:
                         m.weight.data.div_(math.sqrt(2.0 * self.layer_id))
-                    print("siren_init")
-                else:
-                    print("!!!")
-                # else:
-                pass
-                # m.weight.data.normal_(0, 0.02)
             if m.bias is not None:
                 pass
                 m.bias.data.zero_()                    
         else: pass
     def siren_initialization(self):
         for var, m in self.named_children():
-            # For all initialization here, we assume n = 1 (i.e., INR function of time only)
             if var == "phi_init": 
-                # m.apply(self.init_firstLayer)
                 m.apply(self.init_midLayers)
             elif var == "phi_mid":
                 self.dim_in = self.hidden_dim

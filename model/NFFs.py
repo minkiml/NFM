@@ -4,15 +4,8 @@ import torch.nn as nn
 from model.utilities import trunc_normal_, F_combine
 from utils.vars_ import HyperVariables
 from model.norms import NormalizationLayer
-from model.util_nets import (Siren_block, CV_projection)
+from model.util_nets import (Siren_block, CV_MLP)
 from model.LFT import lft_scale_bias
-
-
-def complex_mul( x, weights):
-    if weights.dim() ==2:
-        return torch.einsum("...i,io->...o", x, weights)
-    elif weights.dim() == 3:
-        return torch.einsum("...fi,fio->...fo", x, weights)
 
 def complex_mul( x, weights):
     if weights.dim() ==2:
@@ -209,10 +202,10 @@ class INFF(nn.Module):
                                 nl = "mix",
                                 layer_id= layer_id) 
 
-        self.norm_out = NormalizationLayer(norm = "InstanceNorm",
+        self.norm_1 = NormalizationLayer(norm = "InstanceNorm",
                                         hidden = vars.hidden_dim , 
                                         affine = True)
-        self.norm_out2 = NormalizationLayer(norm = "InstanceNorm", 
+        self.norm_2 = NormalizationLayer(norm = "InstanceNorm", 
                                         hidden = vars.hidden_dim, 
                                         affine = False)
         self.inff_scale_bias = lft_scale_bias(self.hypervar_INFF,
@@ -220,7 +213,7 @@ class INFF(nn.Module):
                                               bias = True,
                                               std_ = 1.0)
 
-        self.aggregator = CV_projection(dim_in = vars.hidden_dim, dim_out = vars.hidden_dim, 
+        self.aggregator = CV_MLP(dim_in = vars.hidden_dim, dim_out = vars.hidden_dim, 
                                         factor= 1, non_linearity= True, hidden = None,
                                         shared = True, bias = False, spec_out= None, dropout= dropout,
                                         std_= self.hypervar_INFF.init_std, nl_type="ReLU") 
@@ -231,7 +224,7 @@ class INFF(nn.Module):
     def forward(self, x, x_cond = None, temporal_loc = None):
         B, F_, d_ = x.shape
         f_x = self.phi_INFF(tc = temporal_loc, B=1, L=self.hypervar_INFF.L_span,dev = x.device)
-        f_x = (self.norm_out(f_x) + self.norm_out2(x_cond).detach())
+        f_x = (self.norm_1(f_x) + self.norm_2(x_cond).detach())
         f = self.hypervar_INFF.DFT_(f_x)
         f = self.aggregator(f)
         

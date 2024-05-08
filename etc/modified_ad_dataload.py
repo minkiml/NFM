@@ -1,3 +1,5 @@
+#Note the libraries below are compatible with the original code implementation (see readme) 
+
 import os
 import numpy as np
 import pandas as pd

@@ -1,5 +1,5 @@
 import torch.nn as nn
-from model.FFs import (FNO, GFN, AFNO, AFF, INFF)
+from model.NFFs import (FNO, GFN, AFNO, AFF, INFF)
 from model.util_nets import PositionwiseFeedForward
 from utils.vars_ import HyperVariables
 from model.norms import NormalizationLayer

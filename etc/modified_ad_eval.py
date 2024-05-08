@@ -1,3 +1,6 @@
+#Note the libraries below are compatible with the original code implementation (see readme) 
+
+
 from data_provider.data_factory import data_provider
 from exp.exp_basic import Exp_Basic
 from utils.tools import EarlyStopping, adjust_learning_rate, adjustment

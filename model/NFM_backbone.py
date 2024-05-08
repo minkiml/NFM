@@ -152,32 +152,3 @@ class NFM_general(nn.Module):
                 self.init = 4 
                 self.init_std =self.hyper_var_nfm.init_std # 0.7
                 m.apply(self.nn_initialization)
-
-##################################### For inspection
-    # def forward_insp(self, x):
-    #     B, f_in, c = x.shape
-    #     assert c == self.hyper_var_nfm.C_
-
-    #     x = self.projection_in(x)
-        
-
-    #     # LFT
-    #     # x = self.revin(x, 'norm')
-    #     # z_ = self.hyper_var_nfm.DFT_(x)
-    #     z, t_token, f_token = self.LFT_layer.forward_insp(x) # out: B, L_base, hidden  , p, px, x_, x_freq
-
-    #     residuel = z
-    #     # condition_ = self.hyper_var_nfm.DFT_(z)
-    #     condition_ = z
-    #     #NFF
-    #     # x = self.revin(x, 'norm')
-    #     # z = self.revin(z, 'norm')
-    #     for i, layer in enumerate(self.NFF_layers):
-    #         z, nff, x_bar,freq2 = layer.forward_insp(z, condition_) # out: B, L_base, hidden     # , freq, s
-    #     # z = self.revin(z, 'denorm')
-    #     # Final featuer polishing
-    #     z_ = z + residuel # self.droppath(z) + residuel
-    #     z = self.ll_NFF(z)
-    #     # z_ = self.fl(z_)
-
-    #     return z_, nff, x_bar, residuel, t_token, f_token, z, freq2
