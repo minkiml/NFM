@@ -82,9 +82,9 @@ To train NFM on anomaly detection task, do
 sh ./AnomalyD/scripts/SMD.sh 
 ```
 
-Note that as mentioned in the main work, we found some bugs in the other's official implementation codes. 
-We provide fixed code samples (in ... ) that we used to replace their original ones and to run the implementation codes.
-For details, see [folder](etc)  
+Note that we found some bugs in the other's official implementation codes. 
+
+We provide fixed code samples and details that we used to replace their original ones and to run the implementation codes in in [folder](etc).
 
 ## Main Results
 
