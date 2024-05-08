@@ -1,8 +1,14 @@
 import torch
+import numpy
 import os
+import json
+import csv
 import numpy as np
+import torch.nn.functional as F
+from sklearn.manifold import TSNE
 import matplotlib.pyplot as plt
 import seaborn as sns; sns.set()
+import logging
 # Set plt params
 sns.set(style='ticks', font_scale=1.2)
 plt.rcParams['figure.figsize'] = 12,8
@@ -179,7 +185,7 @@ class Logger(object):
         plt.clf()   
         plt.close(fig)
     
-
+    # TODO: tidy up this 
     def log_2d_vis(self, x, f = None, name_ = "", time = False):
         if time == False:
             if x.dim() == 2:

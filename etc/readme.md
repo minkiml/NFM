@@ -1,6 +1,6 @@
 # Modified implementation codes
 
-For some baseline results we have in our work, make the following correction in their official implementation codes.
+For some baseline results we have in our work, we found some bugs in their original implementation codes and make the following correction in them to produce the results presented in our work.
 
 ## Anomaly detection
 

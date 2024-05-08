@@ -5,7 +5,7 @@ def Load_dataset(argw):
                             sub_dataset = argw["sub_dataset"],
                             varset_train = argw["varset_train"],
                             varset_test = argw["varset_test"],
-                            channel_independence= not argw["multivariate"],
+                            channel_independence= not argw["channel_dependence"],
                             # Forecasting setup
                             training_portion= argw["training_portion"], 
                             look_back= argw["look_back"],

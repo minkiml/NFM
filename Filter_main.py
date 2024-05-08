@@ -58,22 +58,16 @@ if __name__ == '__main__':
     parser.add_argument("--final_wd", type=float, default=0.4, help = "fianl weight decay")
 
     # NFM params
-    parser.add_argument("--std", type=float, default=0.04, help="std factor used for initialization")
-    parser.add_argument('--droppath', type=float, default=1)  #del
     parser.add_argument('--input_c', type=int, default=7)  
     parser.add_argument("--hidden_dim", type=int, default=64)
-    parser.add_argument("--final_hidden_dim", type=int, default=0, help = "Final feature-widening layer")
     parser.add_argument("--inff_siren_ff_dim", type=int, default=256)
     parser.add_argument("--inff_siren_hidden", type=int, default=64)
     parser.add_argument("--inff_siren_omega", type=int, default=30)
     parser.add_argument("--hidden_factor", type=int, default=3)
     parser.add_argument("--layer_num", type=int, default=1)
     parser.add_argument("--dropout", type=float, default=0.3)
-    parser.add_argument("--revstat", type=int, default=1, help= "0 for False & 1 for True") #del
     parser.add_argument("--filter_type", type=str, default="INFF", choices=["INFF", "FNO", "AFNO", "GFN", "AFF"])
-    parser.add_argument("--learnable_adain", type=int, default=1) #del
     # LFT (based on siren) params
-    parser.add_argument("--siren_ff_dim", type=int, default=256)
     parser.add_argument("--siren_hidden", type=int, default=48)
     parser.add_argument("--siren_in_dim", type=int, default=4)
     parser.add_argument("--siren_omega", type=float, default=30.)
@@ -84,7 +78,7 @@ if __name__ == '__main__':
     parser.add_argument("--num_modes", type=int, default=10)
     parser.add_argument("--filter_mode", type=str, default="Lowpass", choices=["Lowpass", "Bandpass", "Highpass"])
     parser.add_argument("--num_class", type=int, default=10)
-    parser.add_argument("--multivariate", type=int, default=1, help = "1: True, 0: False (channel independent)")
+    parser.add_argument("--channel_dependence", type=int, default=1, help = "1: True, 0: False (channel independent)")
     parser.add_argument("--freq_span", type=int, default=-1)
 
     # IN-Out for training
@@ -100,7 +94,8 @@ if __name__ == '__main__':
         nargs='+',
         type=int,
         default=[360, 360, 180, 360],
-        help="A set of variables [F_L, F_N, L (horizon), N (lookback)] for formatting testing data. If same as 'vars_in_train' then, conventional scenario")
+        help="A set of variables [F_L, F_N, L (horizon), N (lookback)] \
+            for formatting testing data. If same as 'vars_in_train' then, conventional scenario")
 
     config = parser.parse_args()
     ##########################################################

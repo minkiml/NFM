@@ -40,7 +40,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--log_path", type=str, default='./Forecasting/Logs_/logs_', help="path to save all the products from each trainging")
     parser.add_argument("--id_", type=int, default=0, help="Run id")
-    parser.add_argument("--data_path", type=str, default='./datasets/forecasting_data/default.csv', help="path to grab data")
+    parser.add_argument("--data_path", type=str, default='./data', help="path to grab data")
     parser.add_argument("--description", type=str, default='', help="optional desciption")
     parser.add_argument("--dataset", type=str, default="ETTm1", choices=["ETTh1", "ETTh2", "ETTm1", "ETTm2", "electricity", 
                                                                          "traffic", "weather"])
@@ -94,8 +94,8 @@ if __name__ == '__main__':
     parser.add_argument("--siren_omega", type=float, default=30.)
     
     # Forecasting params
-    parser.add_argument("--freq_span", type=int, default=-1, help = "cut-off frequency, i.e., Heuristic low pass filter. -1 means full span")
-    parser.add_argument("--multivariate", type=int, default=1, help = "1: True, 0: False (channel independent)")
+    parser.add_argument("--freq_span", type=int, default=-1, help = "-1 for full span modelling")
+    parser.add_argument("--channel_dependence", type=int, default=1, help = "channel_dependence -- 1: True, 0: False (channel independent)")
     parser.add_argument("--look_back", type=int, default=720)
     parser.add_argument("--horizon", type=int, default=96)
     parser.add_argument("--fullspan_pred", type=int, default=1) # del

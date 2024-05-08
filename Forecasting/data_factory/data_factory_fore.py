@@ -75,7 +75,6 @@ class Forcasting_data(object):
         self.__read_and_construct__()
 
     def __read_and_construct__(self):
-        # (cont_L, c) --> (N * C, L, 1) --> (B, L, 1) from sampling 
         list_of_benchmark_protocol = LIST_OF_FORCASTING_BENCHMARK_LENGTH            
         path_ = self.path #root_dir
         type_ = '.csv'
@@ -119,19 +118,19 @@ class Forcasting_data(object):
         self.C_ = training_data.shape[1]
         self.L_ = self.look_back
 
-        # Look-back Window (formulate samples with look-back windown in advance instead of applying on the fly during batching)
+        # Lookback window 
         train_x, train_y = apply_look_back_window(training_data, 
                                             L =self.look_back,
-                                            S = 1,# if self.sub_dataset != "electricity" and self.sub_dataset != "traffic" else int(self.look_back* 1/4),
+                                            S = 1,
                                             horizons_ = self.horizon,
-                                            target = True) # final shape is (N, L, C), final shape is (N, horizon+labels, C)
+                                            target = True) 
         testing_x, testing_y = apply_look_back_window(testing_data, 
                                             L =self.look_back,
                                             S = 1,
                                             horizons_ = self.horizon,
-                                            target = True) # final shape is (N, L, C), (N, horizon+labels, C)
+                                            target = True) 
         
-        f_in_factor =  int(self.varset_train[1] / self.varset_test[1]) # make sure this is integer
+        f_in_factor =  int(self.varset_train[1] / self.varset_test[1])
         testing_x = testing_x[:,::f_in_factor,:]
 
         f_out_factor =  int(self.varset_train[0] / self.varset_test[0])
@@ -141,7 +140,7 @@ class Forcasting_data(object):
                                             L =self.look_back,
                                             S = 1,
                                             horizons_ = self.horizon,
-                                            target = True) # final shape is (N, L, C), (N, horizon+labels, C)
+                                            target = True) 
         if self.channel_independence:
             Bx, Lx, Cx = train_x.shape
             By, Ly, Cy = train_y.shape
@@ -152,7 +151,7 @@ class Forcasting_data(object):
         self.logger.info(f"number of val x samples: {val_x.shape[0]}")
         self.logger.info(f"number of test x samples: {testing_x.shape[0]}")
 
-        train_freq_target = torch.fft.rfft(torch.cat((train_x, train_y), dim = 1), dim = 1, norm = "ortho") # norm = "ortho"
+        train_freq_target = torch.fft.rfft(torch.cat((train_x, train_y), dim = 1), dim = 1, norm = "ortho") 
 
         # Construct dataloaders
         self.training_loader = DataLoader(forecasting_dataset(set_ = [train_x, train_y, train_freq_target],

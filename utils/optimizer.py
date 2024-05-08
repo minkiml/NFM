@@ -27,7 +27,7 @@ def opt_constructor(scheduler,
         param_groups = [
             {
                 'params': (p for n, p in nfm.named_parameters()
-                        if ('bias' not in n)),  
+                        if ('bias' not in n)), 
                 'lr': lr,
             },{
                 'params': (p for n, p in nfm.named_parameters()
@@ -45,15 +45,15 @@ def opt_constructor(scheduler,
             {
                 'params': (p for n, p in nfm.named_parameters()
                         if ('bias' not in n) ),
-                'WD_exclude': True if start_wd == 0. else False,
-                'weight_decay': start_wd
+                'WD_exclude': True,
+                'weight_decay': 0
             },
 
             {
                 'params': (p for n, p in nfm.named_parameters()
                         if ('bias' in n)),
-                'WD_exclude': True if start_wd == 0. else False,
-                'weight_decay': start_wd
+                'WD_exclude': True,
+                'weight_decay': 0
             }
         ]
         opt = torch.optim.AdamW(param_groups)

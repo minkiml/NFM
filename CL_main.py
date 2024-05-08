@@ -42,7 +42,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--log_path", type=str, default='./Classification/Logs_/logs_', help="path to save all the products from each trainging")
     parser.add_argument("--id_", type=int, default=0, help="Run id")
-    parser.add_argument("--data_path", type=str, default='./datasets/classification_data/default.csv', help="path to grab data")
+    parser.add_argument("--data_path", type=str, default='./data', help="path to grab data")
     parser.add_argument("--description", type=str, default='', help="optional")
     parser.add_argument("--dataset", type=str, default="SpeechCommands")
     parser.add_argument('--mode', type=str, default='train', choices=['train', 'test', 'pretrain', 'finetune', "ct"]) #del
@@ -62,7 +62,7 @@ if __name__ == '__main__':
 
     # optimizer
     parser.add_argument("--lr_", type=float, default=5e-4, help= "learning rate")
-    parser.add_argument("--loss_type", type=str, default="TFDR", help= "Not used unless one do reconstruction")
+    parser.add_argument("--loss_type", type=str, default="TFDR", help= "Not used")
     parser.add_argument("--scheduler", type=int, default=0)
     ### Scheduler params
     parser.add_argument("--warm_up", type=float, default=0.2, help="portion of warm up given number of epoches, e.g., 20 percent by defualt")
@@ -73,19 +73,14 @@ if __name__ == '__main__':
     parser.add_argument("--final_wd", type=float, default=0.0, help = "fianl weight decay")
 
     # NFM params
-    parser.add_argument("--std", type=float, default=0.04, help="std factor used for initialization")
-    parser.add_argument('--droppath', type=float, default=1.)  #del
     parser.add_argument('--input_c', type=int, default=7) 
     parser.add_argument("--hidden_dim", type=int, default=64)
-    parser.add_argument("--final_hidden_dim", type=int, default=0, help = "Final feature-widening layer")
     parser.add_argument("--inff_siren_hidden", type=int, default=64)
     parser.add_argument("--inff_siren_omega", type=int, default=30)
     parser.add_argument("--hidden_factor", type=int, default=3)
     parser.add_argument("--layer_num", type=int, default=1)
     parser.add_argument("--dropout", type=float, default=0.3)
-    parser.add_argument("--revstat", type=int, default=1, help= "0 for False & 1 for True") #del
     parser.add_argument("--filter_type", type=str, default="INFF", choices=["INFF", "FNO", "AFNO", "GFN", "AFF"])
-    parser.add_argument("--learnable_adain", type=int, default=1) #del
     # LFT (based on siren) params
     parser.add_argument("--lft", type=int, default=1)
     parser.add_argument("--siren_hidden", type=int, default=48)
@@ -98,8 +93,8 @@ if __name__ == '__main__':
     parser.add_argument("--dropped_rate", type=int, default=0, help = "iregular setting with dropping. e.g., 30, 50, 70") 
     parser.add_argument("--mfcc", type=int, default=1, help="processed (1:True) or raw (0:False)") 
     parser.add_argument("--num_class", type=int, default=10)
-    parser.add_argument("--multivariate", type=int, default=1, help = "1: True, 0: False (channel independent)")
-    parser.add_argument("--freq_span", type=int, default=-1)
+    parser.add_argument("--channel_dependence", type=int, default=1, help = "1: True, 0: False (channel independent)")
+    parser.add_argument("--freq_span", type=int, default=-1, help = "-1 for operating on full frequency span")
 
     # IN-Out for training
     parser.add_argument(
@@ -114,7 +109,8 @@ if __name__ == '__main__':
         nargs='+',
         type=int,
         default=[360, 360, 180, 360],
-        help="A set of variables [Fs, F_in, L_out (horizon), L_in (lookback)] for formatting testing data. If same as 'vars_in_train' then, conventional scenario")
+        help="A set of variables [Fs, F_in, L_out (horizon), L_in (lookback)] \
+            for formatting testing data. If same as 'vars_in_train' then, conventional scenario")
 
     config = parser.parse_args()
     ##########################################################
