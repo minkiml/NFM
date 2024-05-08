@@ -51,17 +51,16 @@ We examplify ones in ETTm and speechcommand run scripts.
 ## Training & evaluation
 Once you have downloaded the necessary datasets, you are all set to run the experiments.
 
-There are run scrips and main&solver separated for each task. The main entrypoint is named *_mina.py (e.g., [FC_main.py](FC_main.py) is the main entrypoint).    
+There are run scrips and main&solver separated for each task. The main entrypoint is named *_main.py (e.g., [FC_main.py](FC_main.py) is the main entrypoint).    
 
 ### Forecasting
 To train NFM on the forecasting task, do
 ```trainf
-sh ./Forecasting/scripts/ETTm.sh
+sh ./Forecasting/scripts/ETTm1.sh
 ```
-- This will run NFM training on ETTm1 and ETTm2 in the conventional setup (equal input and output resolution).
+- This will run NFM training on ETTm1 in the conventional setup (equal input and output resolution).
 - The evaluation automatically follows after it.
-- The .sh run script also contains "testing on different resolution outputs" which is also made right after the conventional forecasting over all 4 horizons. 
-- Replace ETTm to others for training NFM on others.
+- The .sh run script also contains "testing on different resolution outputs" which is also made automatically right after the conventional forecasting over all 4 horizons. 
 
 ### Classification
 To train NFM for classification task on raw SpeechCommand, do 
@@ -76,17 +75,16 @@ To train NFM on MFCC, do
 ```trainc
 sh ./Classification/scripts/speechcommand.sh 
 ```
-This also runs evaluations afterwards.
 
 ### Anomaly Detection
 To train NFM on anomaly detection task, do
 ```traina
 sh ./AnomalyD/scripts/SMD.sh 
 ```
-Replace SMD to others for training on others. 
 
-Note that as mentioned in the main work, we found some flaws in the other's official implementation codes. 
-We provide fixed code samples (in ... ) that we used to replace their original ones and to run the implementation codes. 
+Note that as mentioned in the main work, we found some bugs in the other's official implementation codes. 
+We provide fixed code samples (in ... ) that we used to replace their original ones and to run the implementation codes.
+For details, see [folder](etc)  
 
 ## Main Results
 
