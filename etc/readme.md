@@ -16,7 +16,7 @@ Moreover, replace the test function in anomaly dectection solver script of the a
 This makes the following changes.
 - Compute anomaly threshold using correct validation set and training set.
 - Evaluate on correct testing set.   
-- Compute correct "point-wise" estimation (the process before the anomaly evaluation) in FITS where the estimation was used to be made over the entire window chunk.  
+- Compute correct anomaly threshold and do "point-wise" estimation (the process before the anomaly evaluation) in FITS where the estimation was used to be made over the entire window chunk.  
 
 
 ## Forecasting
