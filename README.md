@@ -84,7 +84,7 @@ sh ./AnomalyD/scripts/SMD.sh
 
 Note that we found some bugs in the other's official implementation codes. 
 
-We provide fixed code samples and details that we used to replace their original ones and to run the implementation codes in in [folder](etc).
+We provide fixed code samples and details that we used to replace their original ones and to run the implementation codes in [folder](etc).
 
 ## Main Results
 
