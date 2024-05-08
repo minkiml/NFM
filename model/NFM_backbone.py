@@ -1,12 +1,11 @@
 import torch.nn as nn
 import torch.nn.init as init
-import torch
 import numpy as np
 from model.LFT import LFT_block, PositionalEncoding
 from model.mixingblock import NFF_block
-from model.utilities import (F_combine, DropPath, Permute, NoiseInjection, trunc_normal_)
+from model.utilities import Permute
 from utils.vars_ import HyperVariables
-from model.util_nets import (CV_projection, PositionwiseFeedForward, Linear1d, Sine, mul_omega, Periodic_activation)
+from model.util_nets import (PositionwiseFeedForward, Linear1d, mul_omega, Periodic_activation)
 from model.util_nets import fourier_mapping
 
 class NFM_general(nn.Module):
