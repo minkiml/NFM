@@ -21,7 +21,7 @@ class Classifier(nn.Module):
             self.pooling_ = nn.AdaptiveAvgPool1d(factor_reduce) if pooling_method == "AVG" else nn.AdaptiveMaxPool1d(factor_reduce)
             self.classifier = nn.Linear(int(final_hidden_dim * factor_reduce), self.hyper_vars_fore.class_num, bias = True)
         elif processing == "mean":
-            self.norm = NormalizationLayer(norm = "LayerNorm_feature", 
+            self.norm = NormalizationLayer(norm = "LayerNorm", 
                                 hidden = self.hyper_vars_fore.hidden_dim, 
                                 affine = False)
             self.classifier = nn.Linear(self.hyper_vars_fore.hidden_dim, self.hyper_vars_fore.class_num, bias = True)

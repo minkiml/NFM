@@ -1,17 +1,11 @@
-
-import math
-import torch.nn.functional as F
 import torch
 import torch.nn as nn
-import torch.fft as fft
-import torch.nn.init as init
-import numpy as np
 
 from model.utilities import trunc_normal_, F_combine
 from utils.vars_ import HyperVariables
 from model.norms import NormalizationLayer
 from model.util_nets import (Siren_block, CV_projection,
-                             PositionwiseFeedForward, Sine)
+                             PositionwiseFeedForward)
 from model.LFT import lft_scale_bias
 def complex_mul( x, weights):
     if weights.dim() ==2:
@@ -193,13 +187,6 @@ class AFF(nn.Module):
         # filter_coeff = F.softshrink(filter_coeff, lambd=0.01)
         # filter_coeff = torch.view_as_complex(filter_coeff).squeeze(-1)
         return x * filter_coeff, filter_coeff.detach(), None
-    # def init_(self, init_std = 0.02, init_mean = 0.):
-    #     trunc_normal_(self.AFNO_1, mean = 0, std = 0.04, a = -0.2, b = 0.2)
-    #     trunc_normal_(self.AFNO_2, mean = 0, std = 0.04, a = -0.2, b = 0.2)
-        # init.orthogonal_(self.Hyper_AFNO_1)
-        # init.orthogonal_(self.Hyper_AFNO_2)
-        # init.uniform_(self.Hyper_AFNO_1, -1, 1)
-        # init.uniform_(self.Hyper_AFNO_2, -1, 1)
 
 class INFF(nn.Module):
     '''
@@ -207,320 +194,51 @@ class INFF(nn.Module):
     Constructing an implicit neural representation of frequency filter
     '''
     def __init__(self, vars: HyperVariables, 
-                 adaptive = True,
-                 time_ = False,
                  dropout = 0.2):
         super(INFF, self).__init__()
         self.hypervar_INFF = vars
-        self.sparsity_threshold = 0.01
-        self.adaptive = adaptive
-        self.spec_filter = None
         self.phi_INFF = Siren_block(vars = vars,
                                 hidden_dim = self.hypervar_INFF.INFF_siren_hidden,
-                                out_dim = self.hypervar_INFF.hidden_dim, # [self.outdim_["in_feature"] * self.outdim_["out_feature"]]  [vars.hidden_dim, vars.hidden_dim * hidden_factor]
-                                omega = self.hypervar_INFF.INFF_siren_omega,
-                                siren_dim_in = self.hypervar_INFF.LFT_siren_dim_in,
-
-                                midlayer_num = 1,
-                                type_ = "linear",
-                                default_init=False) # False
-
-        self.norm_out = NormalizationLayer(norm = self.hypervar_INFF.norm_inff, # LayerNorm_seq  InstanceNorm  if not self.mixing else "None"
-                                        hidden = vars.hidden_dim, 
-                                        affine = False,
-                                        var=True)
-        self.inff_scale_bias = lft_scale_bias(self.hypervar_INFF,
-                                              scale = True,
-                                              bias = False,
-                                              std_ = 1.0)
-        # self.norm_out2 = NormalizationLayer(norm = "InstanceNorm", # LayerNorm_feature
-        #                                         hidden = self.hypervar_INFF.hidden_dim, 
-        #                                         affine = True)
-        if time_:
-            self.spec_filter = PositionwiseFeedForward(vars.hidden_dim * 2, vars.hidden_dim, 
-                                                 dropout=vars.dropout, 
-                                                 activation = "GeLU",
-                                                 type_ = "linear-c",
-                                                 layer_id= 1,
-                                                 out_dim= vars.hidden_dim)
-        else:
-            if self.adaptive:
-                self.spec_filter = CV_projection(dim_in = vars.hidden_dim, dim_out = vars.hidden_dim, # //
-                                         factor= 3, non_linearity= True, hidden = None,
-                                            shared = True, bias = False, spec_out= None, dropout= dropout,
-                                            std_= self.hypervar_INFF.init_std, nl_type="GeLU") #self.hypervar_INFF.init_std
-            
-                # self.spec_filter = CV_projection_lin(dim_in = vars.hidden_dim*2, dim_out = vars.hidden_dim,
-                #                                     bias = False, factor = 2,
-                #                                     non_linearity = True, dropout = 0.15)
-                                         
-    def forward(self, x, x_cond, time_ = False):
-        B, F_, d_ = x.shape
-        if time_:
-            f_x = self.phi_INFF(B=1, L=self.hypervar_INFF.L_base,dev = x.device)
-            if self.hypervar_INFF.freq_span < self.hypervar_INFF.f_base:
-                f_x = f_x[:,:self.hypervar_INFF.L_span,:]
-            f_x = torch.cat((f_x.squeeze(0).expand(B,-1,-1),x_cond), dim = -1) ## 
-            f_x = self.norm_out(self.spec_filter(f_x))
-            f = self.hypervar_INFF.DFT_(f_x)
-            x[:,1:,:] *= f[:,1:,:]
-            return x, f, self.hypervar_INFF.IDFT_(f, L = self.hypervar_INFF.L_span).detach()
-        else:
-            f_x = self.norm_out(self.phi_INFF(B=1, L=self.hypervar_INFF.L_span,dev = x.device))
-            f = self.hypervar_INFF.DFT_(f_x)
-            if self.hypervar_INFF.freq_span < self.hypervar_INFF.f_base:
-                f = f[:,:self.hypervar_INFF.freq_span,:]
-            _, F_, d_ = f.shape
-            assert x.shape[1] == f.shape[1]
-            f = self.inff_scale_bias(f)
-            if self.adaptive:
-                x_cond = x_cond[:,:self.hypervar_INFF.freq_span,:]         
-                f = f#.expand(B,-1,-1)
-                # f = torch.cat((f,x_cond), dim = -1) ## 
-                f = f + x_cond#.detach()
-                # f = self.comp_normalization_(f)
-                real_, imag_ = self.spec_filter(f)
-                f = F_combine(real_, imag_)
-                x[:,0:,:] *= f[:,0:,:]
-            else: x = x * f
-        return x, f, self.hypervar_INFF.IDFT_(f, L = self.hypervar_INFF.L_span).detach()
-    def comp_normalization_(self, f):
-        return f / f.norm(dim=[1,2], keepdim = True)
-
-    def forward_2(self, x, x_cond, time_ = True):
-        B, F_, d_ = x.shape
-        f_x = self.phi_INFF(B=1, L=self.hypervar_INFF.L_base,dev = x.device)
-        if self.hypervar_INFF.freq_span < self.hypervar_INFF.f_base:
-            f_x = f_x[:,:self.hypervar_INFF.L_span,:]
-        f_x = torch.cat((f_x.squeeze(0).expand(B,-1,-1),x_cond), dim = -1) ## 
-        f_x = self.norm_out(self.spec_filter(f_x))
-        f = self.hypervar_INFF.DFT_(f_x)
-        x[:,1:,:] *= f[:,1:,:]
-        return x, f, self.hypervar_INFF.IDFT_(f, L = self.hypervar_INFF.L_span).detach()
-
-
-class INFF_ada(nn.Module):
-    '''
-    The frequency filter is parameterized by SIREN 
-    Constructing an implicit neural representation of frequency filter
-    '''
-    def __init__(self, vars: HyperVariables, 
-                 adaptive = True,
-                 time_ = False,
-                 dropout = 0.2):
-        super(INFF_ada, self).__init__()
-        self.hypervar_INFF = vars
-        self.sparsity_threshold = 0.01
-        self.adaptive = adaptive
-        self.spec_filter = None
-        self.phi_INFF = Siren_block(vars = vars,
-                                hidden_dim = self.hypervar_INFF.INFF_siren_hidden,
-                                out_dim = self.hypervar_INFF.hidden_dim, # [self.outdim_["in_feature"] * self.outdim_["out_feature"]]  [vars.hidden_dim, vars.hidden_dim * hidden_factor]
+                                out_dim = self.hypervar_INFF.hidden_dim, 
                                 omega = self.hypervar_INFF.INFF_siren_omega,
                                 siren_dim_in = self.hypervar_INFF.LFT_siren_dim_in,
 
                                 midlayer_num = 2,
                                 type_ = "linear",
                                 default_init=False,
-                                nl = "mix") # False
+                                nl = "mix") 
 
-        self.norm_out = NormalizationLayer(norm = "LayerNorm_seq", # LayerNorm_seq  InstanceNorm  if not self.mixing else "None"
+        self.norm_out = NormalizationLayer(norm = "InstanceNorm", 
                                         hidden = vars.hidden_dim , 
                                         affine = True,
-                                        var=True,
-                                        adaptive=False,
-                                        learnable_weights= False)
-        self.norm_out2 = NormalizationLayer(norm = "LayerNorm_seq", # LayerNorm_seq  InstanceNorm  if not self.mixing else "None"
+                                        var=True)
+        self.norm_out2 = NormalizationLayer(norm = "InstanceNorm",
                                         hidden = vars.hidden_dim, 
                                         affine = False,
-                                        var=True,
-                                        adaptive=False,
-                                        learnable_weights= False)
+                                        var=True)
         self.inff_scale_bias = lft_scale_bias(self.hypervar_INFF,
                                               scale = True,
                                               bias = True,
                                               std_ = 0.5)
-        # self.norm_out2 = NormalizationLayer(norm = "InstanceNorm", # LayerNorm_feature
-        #                                         hidden = self.hypervar_INFF.hidden_dim, 
-        #                                         affine = True)
-        if time_:
-            # self.spec_filter = PositionwiseFeedForward(vars.hidden_dim, vars.hidden_dim * 2, 
-            #                                      dropout=vars.dropout, 
-            #                                      activation = "ReLU2",
-            #                                      type_ = "linear",
-            #                                      layer_id= 1,
-            #                                      out_dim= vars.hidden_dim,
-            #                                      std= self.hypervar_INFF.init_std,
-            #                                      init_ = 2)
-            self.spec_filter = CV_projection(dim_in = vars.hidden_dim, dim_out = vars.hidden_dim, # //
-                                         factor= 1, non_linearity= True, hidden = None,
-                                            shared = True, bias = False, spec_out= None, dropout= dropout,
-                                            std_= self.hypervar_INFF.init_std, nl_type="ReLU") # GeLU 
-            
-            # self.spec_filter = AFNO(vars.hidden_dim,
-            #                 hidden_hidden=vars.hidden_dim * 1,
-            #                 head_num= 1,
-            #                 bias_ = False) # GeLU 
-            
-        else:
-            if self.adaptive:
-                self.spec_filter = CV_projection(dim_in = vars.hidden_dim * 2, dim_out = vars.hidden_dim, # //
-                                         factor= 2, non_linearity= True, hidden = None,
-                                            shared = True, bias = False, spec_out= None, dropout= dropout,
-                                            std_= self.hypervar_INFF.init_std, nl_type="ReLU") #self.hypervar_INFF.init_std
-                
-                # self.pre_spec_filter = CV_projection(dim_in = vars.hidden_dim, dim_out = vars.hidden_dim, # //
-                #                          factor= 1, non_linearity= True, hidden = None,
-                #                             shared = True, bias = False, spec_out= None, dropout= dropout,
-                #                             std_= self.hypervar_INFF.init_std, nl_type="ReLU") #self.hypervar_INFF.init_std  ReLU
-                pass
-        # self.f_x = nn.Parameter(torch.randn(1,self.hypervar_INFF.L_span,vars.hidden_dim))
-    def forward(self, x, x_cond = None, x_cond2 = None, time_ = False, temporal_loc = None):
+
+        self.spec_filter = CV_projection(dim_in = vars.hidden_dim, dim_out = vars.hidden_dim,
+                                        factor= 1, non_linearity= True, hidden = None,
+                                        shared = True, bias = False, spec_out= None, dropout= dropout,
+                                        std_= self.hypervar_INFF.init_std, nl_type="ReLU")
+    
+    def forward(self, x, conditional = None, temporal_loc = None):
         B, F_, d_ = x.shape
-        # f_x = self.phi_INFF(B=B, L=self.hypervar_INFF.L_span,dev = x.device, x = x_cond)
-        if time_:
-            # f_x = self.norm_out(self.phi_INFF(B=1, L=self.hypervar_INFF.L_span,dev = x.device).squeeze(0).expand(B,-1,-1), x_cond)
-            # f_x = torch.cat((f_x,x_cond), dim = -1)
+        f_x = self.phi_INFF(tc = temporal_loc, L=self.hypervar_INFF.L_span,dev = x.device)
+        # f_x = (self.norm_out(f_x, None) + self.norm_out2(conditional, None).detach())
+        f_x = self.norm_out(f_x + conditional.detach())
 
-            f_x = self.phi_INFF(tc = temporal_loc, B=1, L=self.hypervar_INFF.L_span,dev = x.device)#.squeeze(0).expand(B,-1,-1)
-            # f_x = self.f_x
-            # f_x = self.norm_out(torch.cat((f_x,x_cond.detach()), dim = -1), cond = None)
-
-            # f_x = torch.cat((self.norm_out(f_x, None), self.norm_out2(x_cond, None).detach()), dim = -1) # PRETTY GOOD
-
-            f_x = (self.norm_out(f_x, None) + self.norm_out2(x_cond, None).detach())
-
-            # f_x = self.norm_out(f_x + x_cond.detach())
-            f = self.hypervar_INFF.DFT_(f_x)
-            f = self.spec_filter(f)
-            # f = F_combine(real_, imag_)
-        else:
-            f_x = self.norm_out(self.phi_INFF(B=1, L=self.hypervar_INFF.L_span,dev = x.device).squeeze(0).expand(B,-1,-1), cond = x_cond2.detach())
-            f = self.hypervar_INFF.DFT_(f_x)
+        f = self.hypervar_INFF.DFT_(f_x)
+        f = self.spec_filter(f)
+     
         if self.hypervar_INFF.freq_span < self.hypervar_INFF.f_base:
             f = f[:,:self.hypervar_INFF.freq_span,:]
         _, F_, d_ = f.shape
         assert x.shape[1] == f.shape[1]
         f = self.inff_scale_bias(f)
-
-        if self.adaptive and not time_:
-            # x_cond = x_cond[:,:self.hypervar_INFF.freq_span,:]    .detach()     
-
-            f = torch.cat((f,self.hypervar_INFF.DFT_(x_cond)), dim = -1) ## 
-
-            # cond_r, cond_i = self.pre_spec_filter(self.hypervar_INFF.DFT_(x_cond))
-            # f = f + self.hypervar_INFF.DFT_(x_cond)
-            # f = self.comp_normalization_(f)
-            
-            f = self.spec_filter(f)
-            # f = F_combine(real_, imag_)
-            pass
-        # x[:,1:,:] *= f[:,1:,:]
         x *=f
-        return x, f, f_x# self.hypervar_INFF.IDFT_(f, L = self.hypervar_INFF.L_span).detach()
-    def comp_normalization_(self, f):
-        return f / f.norm(dim=[1,2], keepdim = True)
-
-    def forward_2(self, x, x_cond, time_ = True):
-        B, F_, d_ = x.shape
-        f_x = self.phi_INFF(B=1, L=self.hypervar_INFF.L_base,dev = x.device)
-        if self.hypervar_INFF.freq_span < self.hypervar_INFF.f_base:
-            f_x = f_x[:,:self.hypervar_INFF.L_span,:]
-        f_x = torch.cat((f_x.squeeze(0).expand(B,-1,-1),x_cond), dim = -1) ## 
-        f_x = self.norm_out(self.spec_filter(f_x))
-        f = self.hypervar_INFF.DFT_(f_x)
-        x[:,1:,:] *= f[:,1:,:]
-        return x, f, self.hypervar_INFF.IDFT_(f, L = self.hypervar_INFF.L_span).detach()
-
-class ForuierChannelMixer(nn.Module):
-    def __init__(self, var: HyperVariables, hidden = 32, factor = 3,
-                 bias = False, shared = False):
-        super(ForuierChannelMixer, self).__init__()
-        self.hyper_var_FCM = var
-        self.hidden = hidden
-        self.half_hidden = (hidden // 2 + 1)
-        self.factor = factor
-        self.bias = bias
-        self.shared = shared
-
-        self.FCM_1 = nn.Parameter(torch.zeros(1 if self.shared else 2, self.half_hidden, self.half_hidden * self.factor))
-        trunc_normal_(self.FCM_1, mean = 0., std = 0.02, a = -2.0, b = 2.0)
-        self.FCM_2 = nn.Parameter(torch.zeros(1 if self.shared else 2, self.half_hidden * self.factor, self.half_hidden))
-        trunc_normal_(self.FCM_2, mean = 0., std = 0.02, a = -2.0, b = 2.0)
-        if bias:
-            self.FCM_bias_1 = nn.Parameter(torch.zeros(1 if self.shared else 2, 1, self.half_hidden * self.factor))
-            self.FCM_bias_2 = nn.Parameter(torch.zeros(1 if self.shared else 2, 1, self.half_hidden))
-
-        self.non_linearity = nn.GELU()
-    def forward(self, x, n1 = None, n2 = None):
-        # n1 and n2 are null arguments
-        B, F_, d_ = x.shape
-        x_c_freq = self.hyper_var_FCM.DFT_(x, dim = -1) 
-
-        freq_real_1 = complex_mul(x_c_freq.real, self.FCM_1[0]) - complex_mul(x_c_freq.imag, self.FCM_1[0 if self.shared else 1])
-        freq_real_1 = self.non_linearity(freq_real_1 + self.FCM_bias_1[0]) if self.bias else self.non_linearity(freq_real_1)
-        freq_imag_1 = complex_mul(x_c_freq.imag, self.FCM_1[0]) + complex_mul(x_c_freq.real, self.FCM_1[0 if self.shared else 1])
-        freq_imag_1 = self.non_linearity(freq_imag_1 + self.FCM_bias_1[0 if self.shared else 1]) if self.bias else self.non_linearity(freq_imag_1)
-
-        freq_real_2 = complex_mul(freq_real_1, self.FCM_2[0]) - complex_mul(freq_imag_1, self.FCM_2[0 if self.shared else 1])
-        freq_real_2 = freq_real_2 + self.FCM_bias_2[0] if self.bias else freq_real_2
-        freq_imag_2 = complex_mul(freq_imag_1, self.FCM_2[0]) + complex_mul(freq_real_1, self.FCM_2[0 if self.shared else 1])
-        freq_imag_2 = freq_imag_2 + self.FCM_bias_2[0 if self.shared else 1] if self.bias else freq_imag_2
-        freq_real_2 = freq_real_2.reshape(B,F_,-1)
-        freq_imag_2 = freq_imag_2.reshape(B,F_,-1)
-        return self.hyper_var_FCM.IDFT_(F_combine(freq_real_2, freq_imag_2), L = self.hidden, dim = -1)
-    
-
-class ForuierChannelMixer2(nn.Module):
-    def __init__(self, var: HyperVariables, hidden = 32, factor = 3,
-                 bias = False, shared = False, dropout = 0.2, std_ = None,
-                 nl = True):
-        super(ForuierChannelMixer2, self).__init__()
-        self.hyper_var_FCM = var
-        self.hidden = hidden
-        self.half_hidden = (hidden // 2 + 1)
-        self.factor = factor
-        self.bias = bias
-        self.shared = shared
-
-        self.FCM = CV_projection(dim_in = self.half_hidden, dim_out = self.half_hidden, # //
-                                         factor= factor, non_linearity= nl, hidden = None,
-                                            shared = self.shared, bias = bias, spec_out= None,
-                                            dropout=dropout, std_= self.hyper_var_FCM.init_std if std_ is None else std_)
-
-    def forward(self, x, n1 = None, n2 = None):
-        # n1 and n2 are null arguments
-        B, F_, d_ = x.shape
-        x_c_freq = self.hyper_var_FCM.DFT_(x, dim = -1) 
-        x_real, x_imag = self.FCM(x_c_freq)
-        return self.hyper_var_FCM.IDFT_(F_combine(x_real, x_imag), L = self.hidden, dim = -1)
-    
-
-
-
-class ForuierChannelMixer3(nn.Module):
-    def __init__(self, var: HyperVariables, hidden = 32, factor = 3,
-                 bias = False, shared = False):
-        super(ForuierChannelMixer3, self).__init__()
-        self.hyper_var_FCM = var
-        self.hidden = hidden
-        self.half_hidden = (hidden // 2 + 1)
-        self.factor = factor
-        self.bias = bias
-        self.shared = shared
-
-        real_ = torch.randn(1,1, self.half_hidden) * 0.02
-        imag_ = torch.randn(1,1, self.half_hidden) * 0.02
-        self.channel_mixing_1 = nn.Parameter(torch.complex(real_, imag_))
-
-        real_ = torch.randn(1,1, self.half_hidden) * 0.02
-        imag_ = torch.randn(1,1, self.half_hidden) * 0.02
-        self.channel_mixing_2 = nn.Parameter(torch.complex(real_, imag_))
-
-        self.nl = Sine()
-    def forward(self, x, n1 = None, n2 = None):
-        # n1 and n2 are null arguments
-        B, F_, d_ = x.shape
-        x_c_freq = self.hyper_var_FCM.DFT_(x, dim = -1) 
-        x_c_freq = self.nl(x_c_freq * self.channel_mixing_1) * self.channel_mixing_2
-        return self.hyper_var_FCM.IDFT_(x_c_freq, L = self.hidden, dim = -1)
+        return x, f, f_x
