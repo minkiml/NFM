@@ -7,9 +7,9 @@ This repository is the official implementation of Neural Fourier Space Modelling
 
 Neural Fourier Space Modelling (NFM) which models time series directly in the Fourier domain is a compact and general solution to a range of time series problems. 
 
-![Overall workflow](images/workflow2.png)
+![Overall workflow](images/Framework.png)
 
-![Overall architecture](images/arch.png)
+![Overall architecture](images/NFM_architecture.png)
 
 Two fundamental aspects of DFT are extensively explored.
 1) DFT provides samples of "functional" representations of the time-domain discrete signals as a function of frequency, and explicitly leveraging this allows learning a function-to-function mapping in a compact form.

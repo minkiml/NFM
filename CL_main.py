@@ -59,6 +59,7 @@ if __name__ == '__main__':
     parser.add_argument("--n_epochs", type=int, default=50)
     parser.add_argument("--batch", type=int, default=32)
     parser.add_argument("--batch_testing", type=int, default=32)
+    parser.add_argument("--patience", type=int, default=30)
 
     # optimizer
     parser.add_argument("--lr_", type=float, default=5e-4, help= "learning rate")
@@ -69,13 +70,13 @@ if __name__ == '__main__':
     parser.add_argument("--start_lr", type=float, default=1e-5, help="starting learning rate")
     parser.add_argument("--ref_lr", type=float, default=1.5e-4, help= "peak learning rate")
     parser.add_argument("--final_lr", type=float, default=1e-5, help = "final learning rate")
-    parser.add_argument("--start_wd", type=float, default=0.0, help = "starting weight decay. 0. means no decay")
-    parser.add_argument("--final_wd", type=float, default=0.0, help = "fianl weight decay")
+    parser.add_argument("--start_wd", type=float, default=0., help = "starting weight decay. 0. means no decay")
+    parser.add_argument("--final_wd", type=float, default=0., help = "fianl weight decay")
 
     # NFM params
     parser.add_argument('--input_c', type=int, default=7) 
-    parser.add_argument("--hidden_dim", type=int, default=64)
-    parser.add_argument("--inff_siren_hidden", type=int, default=64)
+    parser.add_argument("--hidden_dim", type=int, default=32)
+    parser.add_argument("--inff_siren_hidden", type=int, default=32)
     parser.add_argument("--inff_siren_omega", type=int, default=30)
     parser.add_argument("--hidden_factor", type=int, default=3)
     parser.add_argument("--layer_num", type=int, default=1)
@@ -86,6 +87,8 @@ if __name__ == '__main__':
     parser.add_argument("--siren_hidden", type=int, default=48)
     parser.add_argument("--siren_in_dim", type=int, default=4)
     parser.add_argument("--siren_omega", type=float, default=30.)
+    parser.add_argument("--lft_norm", type=int, default=1, help = "Whether to apply normalization to input spectrum in LFT")
+    parser.add_argument("--tau", type=str, default="independent", choices= ["independent", "shared"])
 
     # Classification params
     parser.add_argument("--sr_train", type=int, default=1, help = "sampling rate at training time. e.g., 1, 2, 4")
@@ -115,7 +118,7 @@ if __name__ == '__main__':
     config = parser.parse_args()
     ##########################################################
     ##########################################################
-    if config.UCR: #del
+    if config.UCR: #del TODO 
         list_of_datasets = LIST_OF_S #LIST_OF_INF
         config.log_path = config.log_path + "UCR" + "_" + f"{config.id_}"
         for i, dataset in enumerate(list_of_datasets):

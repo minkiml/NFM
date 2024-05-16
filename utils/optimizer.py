@@ -45,14 +45,14 @@ def opt_constructor(scheduler,
             {
                 'params': (p for n, p in nfm.named_parameters()
                         if ('bias' not in n) ),
-                'WD_exclude': True,
+                'WD_exclude': True if (start_wd == 0) and (final_wd == 0) else False,
                 'weight_decay': 0
             },
 
             {
                 'params': (p for n, p in nfm.named_parameters()
                         if ('bias' in n)),
-                'WD_exclude': True,
+                'WD_exclude': True if (start_wd == 0) and (final_wd == 0) else False,
                 'weight_decay': 0
             }
         ]
@@ -64,11 +64,14 @@ def opt_constructor(scheduler,
             ref_lr=ref_lr,
             final_lr=final_lr,
             T_max=fianl_step)
-        wd_scheduler = CosineWDSchedule(
-            opt,
-            ref_wd=start_wd,
-            final_wd=final_wd,
-            T_max=fianl_step)
+        if (start_wd == 0) and (final_wd == 0):
+            wd_scheduler = None
+        else:
+            wd_scheduler = CosineWDSchedule(
+                opt,
+                ref_wd=start_wd,
+                final_wd=final_wd,
+                T_max=fianl_step)
         
         logger.info("Optimizer (AdamW) with wd and lr scheduler construction was successful")
         return opt, scheduler, wd_scheduler

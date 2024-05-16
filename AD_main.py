@@ -52,6 +52,7 @@ if __name__ == '__main__':
     parser.add_argument('--plot', type=bool, default=False)
     parser.add_argument("--gpu_dev", type=str, default="6")
     parser.add_argument("--description", type=str, default='', help="optional")
+    parser.add_argument("--patience", type=int, default=10)
 
     parser.add_argument("--log_path",
                         type=str,
@@ -72,6 +73,9 @@ if __name__ == '__main__':
     parser.add_argument("--layer_num", type=int, default=1)
     parser.add_argument("--dropout", type=float, default=0.3)
     parser.add_argument("--filter_type", type=str, default="INFF", choices=["INFF", "FNO", "AFNO", "GFN", "AFF"])
+    parser.add_argument("--lft_norm", type=int, default=0, help = "Whether to apply normalization to input spectrum in LFT")
+    parser.add_argument("--tau", type=str, default="independent", choices= ["independent", "shared"])
+
     # LFT (based on siren) params
     parser.add_argument("--lft", type=int, default=1)
     parser.add_argument("--siren_hidden", type=int, default=48)

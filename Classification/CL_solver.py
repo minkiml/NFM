@@ -138,7 +138,9 @@ class Solver(object):
                                             inff_siren_omega = self.inff_siren_omega,
                                             layer_num = self.layer_num,
                                             lft = bool(self.lft),
-                                            
+                                            lft_norm= self.lft_norm,
+                                            tau= self.tau,
+
                                             lft_siren_dim_in = self.siren_in_dim,
                                             lft_siren_hidden = self.siren_hidden,
                                             lft_siren_omega = self.siren_omega,
@@ -148,7 +150,7 @@ class Solver(object):
         self.model = model_constructor(self.hyper_variables)
 
         ipe = len(self.training_data)
-        self.optimizer, self.ir_scheduler, self.wd_scheduler = opt_constructor(self.scheduler,
+        self.optimizer, self.lr_scheduler, self.wd_scheduler = opt_constructor(self.scheduler,
                                                                             self.model,
                                                                             lr = self.lr_,
 
@@ -203,7 +205,7 @@ class Solver(object):
         else:
             self.logger.info("======================TRAIN MODE======================")
 
-        early_stopping = EarlyStopping(patience=30, verbose=True, dataset_name=self.dataset, logger=self.logger)
+        early_stopping = EarlyStopping(patience=self.patience, verbose=True, dataset_name=self.dataset, logger=self.logger)
         train_steps = len(self.training_data)
         self.logger.info(f'train_steps: {train_steps}')
         # self._get_profile(self.model)
@@ -216,8 +218,9 @@ class Solver(object):
                 input = x.to(self.device)######################
                 y = y.to(self.device)
                 self.model.train()
-                if self.ir_scheduler is not None and  self.wd_scheduler is not None:
-                    _new_lr = self.ir_scheduler.step()
+                if self.lr_scheduler is not None:
+                    _new_lr = self.lr_scheduler.step()
+                if self.wd_scheduler is not None:
                     _new_wd = self.wd_scheduler.step()
                 self.optimizer.zero_grad()
 
@@ -242,7 +245,7 @@ class Solver(object):
                 self.log.log_into_csv_(epoch+1,
                                             i,
                                             self.loss_CE.avg,
-                                            _new_lr if self.ir_scheduler is not None else 0.,
+                                            _new_lr if self.lr_scheduler is not None else 0.,
                                             _new_wd if self.wd_scheduler is not None else 0.,
                                             grad_stats_AC.avg,
                                             grad_stats_conv_1.avg,

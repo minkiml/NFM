@@ -151,11 +151,13 @@ class Solver(object):
                                             lft_siren_dim_in = self.siren_in_dim,
                                             lft_siren_hidden = self.siren_hidden,
                                             lft_siren_omega = self.siren_omega,
+                                            lft_norm= self.lft_norm,
+                                            tau= self.tau,
                                             
                                             loss_type= self.loss_type)
         self.model = model_constructor(self.hyper_variables)
         ipe = len(self.training_data)
-        self.optimizer, self.ir_scheduler, self.wd_scheduler = opt_constructor(self.scheduler,
+        self.optimizer, self.lr_scheduler, self.wd_scheduler = opt_constructor(self.scheduler,
                                                                             self.model,
                                                                             lr = self.lr_,
 
@@ -219,8 +221,9 @@ class Solver(object):
                 y = y.to(self.device)
                 
                 f_fullspan = f_fullspan.to(self.device)
-                if self.ir_scheduler is not None and  self.wd_scheduler is not None:
-                    _new_lr = self.ir_scheduler.step()
+                if self.lr_scheduler is not None:
+                    _new_lr = self.lr_scheduler.step()
+                if self.wd_scheduler is not None:
                     _new_wd = self.wd_scheduler.step()
                 self.optimizer.zero_grad()
                 
@@ -258,7 +261,7 @@ class Solver(object):
                                             i,
                                             self.loss_TD.avg,
                                             self.loss_FD.avg,
-                                            _new_lr if self.ir_scheduler is not None else 0.,
+                                            _new_lr if self.lr_scheduler is not None else 0.,
                                             _new_wd if self.wd_scheduler is not None else 0.,
                                             grad_stats_AC.avg,
                                             grad_stats_conv_IMAG.avg,

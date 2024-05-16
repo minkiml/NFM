@@ -1,22 +1,25 @@
 import torch.nn as nn
 import torch.nn.init as init
+import torch
 import numpy as np
 from model.LFT import LFT_block, PositionalEncoding
-from model.mixingblock import NFF_block
-from model.utilities import Permute
+from model.NFFs_ada import NFF_block
+from model.utilities import (DropPath)
 from utils.vars_ import HyperVariables
-from model.util_nets import (PositionwiseFeedForward, Linear1d, mul_omega, Periodic_activation)
+from model.util_nets import (GLU_projection, PositionwiseFeedForward, Linear1d, Sine, mul_omega, Periodic_activation)
+from model.norms import NormalizationLayer
 from model.util_nets import fourier_mapping
-
 class NFM_general(nn.Module):
     ''' 
-    General NFM Backbone 
+    General NFM-net 
     '''
     def __init__(self, 
                  vars:HyperVariables,
                  dropout = 0.2):
         super(NFM_general, self).__init__()    
         self.hyper_var_nfm = vars
+
+        # self.channel_labels = nn.Parameter(torch.randn(1,1,self.hyper_var_nfm.C_) * 0.1, requires_grad= True)
 
         self.projection_in = nn.Linear(self.hyper_var_nfm.C_, self.hyper_var_nfm.hidden_dim, 
                                        bias = False)
@@ -27,12 +30,26 @@ class NFM_general(nn.Module):
         self.LFT_layer = LFT_block(vars = vars,
                               dropout = dropout)
         
-        # mixing layer 
+        # NFF layer 
         self.NFF_layers = nn.ModuleList([NFF_block(vars = vars,
                                     dropout = dropout,
                                     layer_id= i + 1) for i in range(self.hyper_var_nfm.layer_num)])     
-        
-        # final channel mixing
+        # self.NFF_layers = nn.ModuleList([NFFpre_block(vars = vars,
+        #                     dropout = dropout,
+        #                     layer_id= i + 1) for i in range(self.hyper_var_nfm.layer_num)])    
+
+        # self.NFF_layers = nn.ModuleList([NFFinter_block(vars = vars,
+        #                     dropout = dropout,
+        #                     layer_id= i + 1) for i in range(self.hyper_var_nfm.layer_num)])  
+
+        # self.revin = RevIN(num_features = self.hyper_var_nfm.hidden_dim, affine = True)
+        # self.conditional_ = TokenEmbedding(self.hyper_var_nfm.hidden_dim, self.hyper_var_nfm.hidden_dim, init=2)
+        # self.conditional_ = nn.Linear(self.hyper_var_nfm.hidden_dim, self.hyper_var_nfm.hidden_dim)
+        # self.ll_NFF = nn.ReLU()
+        # self.ll_NFF = nn.Sequential(nn.Linear(self.hyper_var_nfm.hidden_dim, self.hyper_var_nfm.final_hidden_dim, bias = False),
+        #                             nn.ReLU()#nn.GELU()
+        #                             )
+
         self.ll_NFF =PositionwiseFeedForward(self.hyper_var_nfm.hidden_dim, self.hyper_var_nfm.hidden_dim, 
                                             dropout=dropout, 
                                             activation = "ReLU2", #"GeLU",
@@ -40,19 +57,19 @@ class NFM_general(nn.Module):
                                             std= self.hyper_var_nfm.init_std,
                                             bias=False,
                                             no_init=False,
-                                            init_= 2,
-                                            factor= 1)
-   
-        self.ff_emb = nn.Sequential(
-                                    Permute((0,2,1)),
-                                    Linear1d(self.hyper_var_nfm.C_, self.hyper_var_nfm.hidden_dim*2),
-                                    Permute((0,2,1)),
-                                    # nn.Linear(self.hyper_var_nfm.C_, self.hyper_var_nfm.hidden_dim*2),
-                                    nn.GLU(-1))
-        # initial ff emb
-        # self.ff_emb = nn.Sequential(
+                                            num_layers= 2,
+                                            init_= 1)
+        
+        # self.norm_out = NormalizationLayer(norm = "LayerNorm_seq", # LayerNorm_seq  InstanceNorm
+        #                         hidden = self.hyper_var_nfm.hidden_dim, 
+        #                         affine = False,
+        #                         var= True,
+        #                         adaptive = False,
+        #                         learnable_weights= False)
+
+        # self.skip_connection = nn.Sequential(
         #                                    nn.Linear(self.hyper_var_nfm.C_, self.hyper_var_nfm.hidden_dim * 3, 
-        #                         bias = True),
+        #                         bias = False),
         #                         mul_omega(feature_dim = self.hyper_var_nfm.hidden_dim * 3, 
         #                         omega = 1,
         #                         omega_learnable = False,
@@ -62,68 +79,136 @@ class NFM_general(nn.Module):
         #                         nn.Linear(self.hyper_var_nfm.hidden_dim * 3, self.hyper_var_nfm.hidden_dim, 
         #                         bias = False)
         #                         )
-
+        self.skip_connection = GLU_projection(dim_in=self.hyper_var_nfm.C_,
+                                     out_dim= self.hyper_var_nfm.hidden_dim,
+                                     act = "periodic",
+                                     projection_omega = 1., 
+                                     type_= "linear-c")
+        
         self.FF_mapping = fourier_mapping(ff_dim = self.hyper_var_nfm.LFT_siren_hidden,  
                                             ff_sigma=256, # 256
                                             learnable_ff = False, # !!
                                             ff_type = "gaussian", # deterministic_exp  gaussian
                                             L = self.hyper_var_nfm.L_base)
-       
+        # self.skip_connection = TokenEmbedding(self.hyper_var_nfm.C_, self.hyper_var_nfm.hidden_dim)
+
+        # self.skip_connection = nn.Sequential(
+        #                         nn.Linear(self.hyper_var_nfm.C_, self.hyper_var_nfm.hidden_dim),
+        #                         Sine(),#nn.LeakyReLU(0.2),
+        #                         mul_omega(feature_dim = self.hyper_var_nfm.hidden_dim, 
+        #                         omega = 1,
+        #                         omega_learnable = True,
+        #                         gaussian = True),
+        #                         TokenEmbedding(self.hyper_var_nfm.hidden_dim, self.hyper_var_nfm.hidden_dim)
+        #                         )
+
+        # self.emb_final = nn.Sequential(mul_omega(feature_dim = self.hyper_var_nfm.hidden_dim, 
+        #                         omega = 1,
+        #                         omega_learnable = True,
+        #                         gaussian = True),
+        #                         nn.Linear(self.hyper_var_nfm.hidden_dim, self.hyper_var_nfm.hidden_dim, 
+        #                         bias = False))
+        # nn.Linear(self.hyper_var_nfm.hidden_dim, self.hyper_var_nfm.hidden_dim, bias = True)
+        # self.projection = Input_embedding(self.hyper_var_nfm.C_,
+        #                                   self.hyper_var_nfm.hidden_dim,
+        #                                   nonlinearity = "sin",
+        #                                   group_fe = True,
+        #                                   spect = 100)
         self.weights_initialization()
         
     def forward(self, x):
         B, f_in, c = x.shape
         assert c == self.hyper_var_nfm.C_
         x1 = self.projection_in(x)
-        x2 = self.ff_emb(x)
+        x2 = self.skip_connection(x)
         x = x1 + x2
 
+        # x = self.projection(x)
+
+        # x1 = self.projection_in(x)
+        # x2 = self.skip_connection(x)
+        # x = self.emb_final(x1 + x2)
+
+        # x = self.projection_in2(self.projection_in1(x))
+        # x = self.revin(x, 'norm')
+        # x = self.projection_in2(self.projection_in1(x))
+
+        # x = self.norm_out(x)
+        # print("mean  ",x.mean(1))
+        # print("STD  ", x.std(1))
+        # LFT
+        # z = self.revin(x, 'norm')
         # temporal_loc = self.FF_mapping(L=self.hyper_var_nfm.L_base, dev = x.device)
         z, f_token = self.LFT_layer(x, temporal_loc = None) # out: B, L_base, hidden  , p, px, x_, x_freq
-
+        # z = self.revin(z, 'denorm')
+        # z = z + self.pos_emb(B)
         residuel = z
+        # condition_ = self.hyper_var_nfm.DFT_(z)
         condition_ = z
         
+        #NFF
+        # z = self.revin(z, 'norm')
         z = z + self.pos_emb(B)
         for i, layer in enumerate(self.NFF_layers):
             z, freq = layer(z, condition_, temporal_loc = None) # out: B, L_base, hidden     # , freq, s
-   
-        z = z + residuel 
-        z = self.ll_NFF(z) 
+        # z = self.revin(z, 'denorm')
+        # Final featuer polishing
+        # z = self.droppath(z)
+        z = z + residuel # self.skip_connection(residuel)
+        z = self.ll_NFF(z) #+ self.skip_connection(residuel)
+        # z = self.revin(z, 'denorm')
         return z, freq, f_token, z, x
+    #, freq, s, p, px, self.hyper_var_nfm.IDFT_(condition_, L=self.hyper_var_nfm.L_base),condition_#z, self.hyper_var_nfm.DFT_(z)#self.hyper_var_nfm.IDFT_(z, L = self.hyper_var_nfm.L_in), z#, (x, z_)
      
     def nn_initialization(self, m):
         if isinstance(m, (nn.Linear, nn.Conv1d)): # (nn.Linear, nn.Conv1d)
             if m.weight is not None:
                 pass
-                if self.init == 1 or self.init == 2:
-                    if self.hyper_var_nfm.option_test == 0:
-                        print("xavier relu gain")
-                        init.xavier_normal_(m.weight, gain=nn.init.calculate_gain('relu'))
-                    elif self.hyper_var_nfm.option_test == 1:
-                        print("xavier tanh gain")
-                        init.xavier_normal_(m.weight, gain=nn.init.calculate_gain('tanh'))
-                    elif self.hyper_var_nfm.option_test == 2:
-                        print("xavier leaky_relu gain")
-                        init.xavier_normal_(m.weight, gain=nn.init.calculate_gain('leaky_relu', 0.2))
-                    elif self.hyper_var_nfm.option_test == 3:
-                        print("xavier linear gain")
-                        init.xavier_normal_(m.weight, gain=nn.init.calculate_gain('linear'))
-                    elif self.hyper_var_nfm.option_test == 4:
-                        print("xavier 6 gain")
-                        init.xavier_normal_(m.weight, gain=np.sqrt(6))
-                elif self.init == 0:
+                print("~~")
+                # init.kaiming_normal_(m.weight, mode='fan_in', nonlinearity='leaky_relu')
+                if self.init == 1:
+                    # init.normal_(m.weight, std=0.02)
+                    # init.kaiming_uniform_(m.weight, mode='fan_in', nonlinearity='leaky_relu')
+
+                    # init.xavier_uniform_(m.weight, gain= 1.4)
+                    # m.weight.data.uniform_(
+                    #     -np.sqrt(6.0 / self.hyper_var_nfm.C_) / 1,
+                    #     np.sqrt(6.0 / self.hyper_var_nfm.C_) / 1)
                     pass
-                # elif self.init == 2:
-                #     pass
+                elif self.init == 0:
+                    # init.kaiming_uniform_(m.weight, mode='fan_in', nonlinearity='leaky_relu')
+
+                    # init.xavier_uniform_(m.weight, gain= 0.5)
+                    # m.weight.data.uniform_(-1 / self.hyper_var_nfm.hidden_dim, 1 / self.hyper_var_nfm.hidden_dim)
+                    pass
+                elif self.init == 2:
+                    # init.xavier_uniform_(m.weight, gain= self.hyper_var_nfm.init_std)
+                    
+                    # init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+                    # init.normal_(m.weight, std=0.02)
+
+                    # init.xavier_uniform_(m.weight, gain = 1.4)  # !!
+
+                    # init.orthogonal_(m.weight)
+                    pass
+                
                 elif self.init == 3:
                     init.xavier_uniform_(m.weight)
+                    # init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='leaky_relu')
+                    # init.normal_(m.weight, std=0.02)
                     pass
                 elif self.init == 4:
+                    # init.xavier_uniform_(m.weight, gain= self.hyper_var_nfm.init_std)
+                    # init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='leaky_relu')
+                    # init.normal_(m.weight, std=0.02)
+                    # trunc_normal_(m.weight, std=0.02 if self.hyper_var_nfm.init_std is None else self.hyper_var_nfm.init_std)
                     pass
             if m.bias is not None:
-                m.bias.data.zero_()  
-                pass
+                # m.bias.data.zero_()   
+                if self.init == 3:
+                    m.bias.data.zero_()  
+                    pass
+        # add more if necessary
         else: pass
 
     def weights_initialization(self):
@@ -151,3 +236,32 @@ class NFM_general(nn.Module):
                 self.init = 4 
                 self.init_std =self.hyper_var_nfm.init_std # 0.7
                 m.apply(self.nn_initialization)
+
+##################################### For inspection
+    def forward_insp(self, x):
+        B, f_in, c = x.shape
+        assert c == self.hyper_var_nfm.C_
+
+        x = self.projection_in(x)
+        
+
+        # LFT
+        # x = self.revin(x, 'norm')
+        # z_ = self.hyper_var_nfm.DFT_(x)
+        z, t_token, f_token = self.LFT_layer.forward_insp(x) # out: B, L_base, hidden  , p, px, x_, x_freq
+
+        residuel = z
+        # condition_ = self.hyper_var_nfm.DFT_(z)
+        condition_ = z
+        #NFF
+        # x = self.revin(x, 'norm')
+        # z = self.revin(z, 'norm')
+        for i, layer in enumerate(self.NFF_layers):
+            z, nff, x_bar,freq2 = layer.forward_insp(z, condition_) # out: B, L_base, hidden     # , freq, s
+        # z = self.revin(z, 'denorm')
+        # Final featuer polishing
+        z_ = z + residuel # self.droppath(z) + residuel
+        z = self.ll_NFF(z)
+        # z_ = self.fl(z_)
+
+        return z_, nff, x_bar, residuel, t_token, f_token, z, freq2

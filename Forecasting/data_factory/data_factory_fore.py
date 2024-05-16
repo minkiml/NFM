@@ -166,7 +166,7 @@ class Forcasting_data(object):
                                             data_name = self.sub_dataset,
                                             type_ = "testing"),
                                         batch_size = self.batch_testing,
-                                        shuffle = True,
+                                        shuffle = False,
                                         num_workers= self.num_workers,
                                         drop_last=False)
         self.logger.info(f"Testing data loader is constructed. The total number of mini-batches: {len(self.testing_loader)}")
@@ -174,9 +174,9 @@ class Forcasting_data(object):
                                             data_name = self.sub_dataset,
                                             type_ = "validating"),
                                         batch_size = self.batch_testing,
-                                        shuffle = True,
+                                        shuffle = False,
                                         num_workers= self.num_workers,
-                                        drop_last=True)
+                                        drop_last=False)
         self.logger.info(f"Validation data loader is constructed. The total number of mini-batches: {len(self.val_loader)}")
 
         del val_x, val_y, testing_x, testing_y, train_x, train_y, train_freq_target

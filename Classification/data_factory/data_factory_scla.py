@@ -2,9 +2,8 @@ import os
 import logging
 from torch.utils.data import DataLoader
 from Classification.data_factory.speech_dataset.speech_commands import SpeechCommands
-from Classification.data_factory.char_dataset.char_trajectories import CharTrajectories
-from Classification.data_factory.UCR_dataset.ucr_load import UCR
-
+from Classification.data_factory.char_dataset.char_trajectories import CharTrajectories # del
+from Classification.data_factory.UCR_dataset.ucr_load import UCR # del
 class classification_dataset(object):
     def __init__(
                 # Loaded dataset

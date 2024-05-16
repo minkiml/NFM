@@ -20,6 +20,8 @@ class HyperVariables(object):
                  hidden_factor = 3,
                  inff_siren_hidden = 64,
                  inff_siren_omega = 30,
+                 lft_norm = False,
+                 tau = "independent",
                  layer_num = 1,
                  lft = True,
                  
@@ -37,8 +39,8 @@ class HyperVariables(object):
         
         self.loss_type = loss_type 
         self.class_num = class_num
-        # Init params # del TODO
-        self.init_std = 0.02 
+        # Init params #
+        self.init_std = 0.06 
         self.init_mean = 0.
         
         # INR-based LFT params (if LFT_type = "naive" the below params are not used)
@@ -46,7 +48,13 @@ class HyperVariables(object):
         self.LFT_siren_dim_in = lft_siren_dim_in
         self.LFT_siren_hidden = lft_siren_hidden 
         self.lft = lft
+        self.LFT_nomalization = lft_norm
+
         # NFM and NFF Hidden layer params
+        self.norm_method = "postnorm" # prenorm
+        self.mixing_method = "pre_channelmixing"
+        self.tau_in_inrs = tau 
+
         self.INFF_siren_hidden = inff_siren_hidden
         self.INFF_siren_omega = inff_siren_omega
         self.hidden_dim = hidden_dim
