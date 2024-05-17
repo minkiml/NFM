@@ -89,7 +89,7 @@ We provide fixed code samples and details that we used to replace their original
 ## Main Results
 
 - NFM achieves the state-of-the-art performances across various time series tasks.
-- NFM is remarkably compact, only consuming **27k** (forecasting), **37k** (classification), and **6.6k** (anomaly detection) parameters 
+- NFM is remarkably compact, only consuming **27K** (forecasting), **37K** (classification), and **6.6K** (anomaly detection) parameters 
 - NFM is verstile as requiring no architectural modification to be specialized to the different tasks.
 - NFM learns function-to-function mapping (i.e., continuous time), and can generalize to time series with previously unseen sampling rate well without re-training.  
 
