@@ -264,7 +264,7 @@ class Siren_block(nn.Module):
         self.hidden_dim = hidden_dim
         if self.hyper_var_siren.tau_in_inrs == "independent":
             self.FF_mapping = fourier_mapping(ff_dim = siren_dim_in,  
-                                                ff_sigma=256,
+                                                ff_sigma=128,
                                                 learnable_ff = True, 
                                                 ff_type = "gaussian", # deterministic_exp  gaussian
                                                 L = self.hyper_var_siren.L_base)

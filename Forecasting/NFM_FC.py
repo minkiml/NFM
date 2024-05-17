@@ -28,7 +28,10 @@ class NFM_FC(nn.Module):
         # IN
         x_mean = torch.mean(x, dim=1, keepdim=True)
         x = x - x_mean
-
+        if self.hyper_vars.norm_trick == "mean_std":
+            x_std=torch.sqrt(torch.var(x, dim=1, keepdim=True)+ 1e-5)
+            x = x / x_std
+        
         # B, L, C = x.shape 
         # NFM backbone
         z, freq , f_token, zz, xx= self.NFM_backbone(x)
@@ -36,6 +39,8 @@ class NFM_FC(nn.Module):
         # Forecasting header
         y = self.predictor(z)
 
+        if self.hyper_vars.norm_trick == "mean_std":
+            y = y * x_std
         y = y +x_mean
         y, y_freq = self.hyper_vars.output_(y)
 

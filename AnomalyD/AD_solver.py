@@ -90,10 +90,10 @@ class Solver(object):
                                               mode='test',
                                               dataset=self.dataset,
                                               logger=self.logger)
-        self.thre_loader = get_loader_segment(self.data_path, batch_size=self.batch_size, win_size=self.win_size,
-                                              mode='thre',
-                                              dataset=self.dataset,
-                                              logger=self.logger)
+        # self.thre_loader = get_loader_segment(self.data_path, batch_size=self.batch_size, win_size=self.win_size,
+        #                                       mode='thre',
+        #                                       dataset=self.dataset,
+        #                                       logger=self.logger)
         self.loss_TD = Value_averager()
         self.loss_FD = Value_averager()
         self.loss_total = Value_averager()
@@ -180,7 +180,7 @@ class Solver(object):
         path = self.model_save_path
         if not os.path.exists(path):
             os.makedirs(path)
-        early_stopping = EarlyStopping(patience=10, verbose=True, dataset_name=self.dataset, logger=self.logger)
+        early_stopping = EarlyStopping(patience=self.patience, verbose=True, dataset_name=self.dataset, logger=self.logger)
         train_steps = len(self.train_loader)
         self.logger.info(f'train_steps: {train_steps}')
         # self._get_profile(self.model)

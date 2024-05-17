@@ -1,7 +1,7 @@
 # sh ./AnomalyD/scripts/PSM.sh 
 export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
 runs=1
-data_path_name='/data/home/mkim332/ts_project1/datas/AD/PSM'
+data_path_name='./datasets/anoamlyD_data/PSM'
 data=PSM
 
 pred_lens=0 # no m_t 
@@ -38,7 +38,6 @@ for (( i=0; i<${runs}; i++ ));
         --inff_siren_omega 30 \
         --layer_num 1 \
         --dropout 0.0 \
-        --droppath 1.0 \
         --std 0.06 \
         --siren_hidden 32 \
         --siren_in_dim 32\
@@ -78,7 +77,6 @@ for (( i=0; i<${runs}; i++ ));
         --inff_siren_omega 30 \
         --layer_num 1 \
         --dropout 0.0 \
-        --droppath 1.0 \
         --std 0.06 \
         --siren_hidden 32 \
         --siren_in_dim 32\

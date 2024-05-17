@@ -1,6 +1,6 @@
 # sh ./Classification/scripts/speechcommand.sh 
 export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
-runs=5
+runs=3
 
 pred_lens=0
 look_backs=161
@@ -12,7 +12,9 @@ random_seed=99
 run_id=0
 
 test_sr=1
-dropouts=(0.05 0.1 0.15 0.2 0.25)
+# dropouts=(0.05 0.1 0.15 0.2 0.25)
+dropouts=(0.15 0.2 0.25)
+
 for (( i=0; i<${runs}; i++ ));
 do
     dropout=${dropouts[$i]}

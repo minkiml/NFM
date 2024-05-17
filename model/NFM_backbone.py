@@ -16,23 +16,21 @@ class NFM_general(nn.Module):
         self.hyper_var_nfm = vars
         self.projection_in = nn.Linear(self.hyper_var_nfm.C_, self.hyper_var_nfm.hidden_dim, 
                                        bias = False)
-        # self.skip_connection = nn.Sequential(
-        #                                    nn.Linear(self.hyper_var_nfm.C_, self.hyper_var_nfm.hidden_dim * 3, 
-        #                         bias = False),
-        #                         mul_omega(feature_dim = self.hyper_var_nfm.hidden_dim * 3, 
-        #                         omega = 1,
-        #                         omega_learnable = False,
-        #                         gaussian = True,
-        #                         spectrum = 1),
-        #                         Periodic_activation(nl="mix"),#nn.LeakyReLU(0.2),
-        #                         nn.Linear(self.hyper_var_nfm.hidden_dim * 3, self.hyper_var_nfm.hidden_dim, 
-        #                         bias = False)
-        #                         )
-        self.skip_connection = GLU_projection(dim_in=self.hyper_var_nfm.C_,
-                                     out_dim= self.hyper_var_nfm.hidden_dim,
-                                     act = "periodic",
-                                     projection_omega = 1., 
-                                     type_= "linear-c")
+        self.skip_connection = nn.Sequential(
+                                           nn.Linear(self.hyper_var_nfm.C_, self.hyper_var_nfm.hidden_dim * 3, 
+                                bias = True),
+                                mul_omega(feature_dim = self.hyper_var_nfm.hidden_dim * 3, 
+                                omega = 1,
+                                omega_learnable = False),
+                                Periodic_activation(nl="mix"),#nn.LeakyReLU(0.2),
+                                nn.Linear(self.hyper_var_nfm.hidden_dim * 3, self.hyper_var_nfm.hidden_dim, 
+                                bias = False)
+                                )
+        # self.skip_connection = GLU_projection(dim_in=self.hyper_var_nfm.C_,
+        #                              out_dim= self.hyper_var_nfm.hidden_dim,
+        #                              act = "periodic",
+        #                              projection_omega = 1., 
+        #                              type_= "linear-c")
         
         self.pos_emb = PositionalEncoding(d_model=self.hyper_var_nfm.hidden_dim, 
                                           max_len=self.hyper_var_nfm.L_span,
@@ -48,7 +46,7 @@ class NFM_general(nn.Module):
 
         self.ll_NFF =PositionwiseFeedForward(self.hyper_var_nfm.hidden_dim, self.hyper_var_nfm.hidden_dim, 
                                             dropout=dropout, 
-                                            activation = "ReLU2", #"GeLU",
+                                            activation = "GeLU", #"GeLU",
                                             out_dim= self.hyper_var_nfm.hidden_dim,
                                             std= self.hyper_var_nfm.init_std,
                                             bias=False,
@@ -88,7 +86,7 @@ class NFM_general(nn.Module):
                 pass
                 print("~~")
                 if self.init == 1:
-                    init.xavier_normal_(m.weight, gain=nn.init.calculate_gain('relu'))
+                    # init.xavier_normal_(m.weight, gain=nn.init.calculate_gain('relu'))
                     pass
                 elif self.init == 0:
                     pass

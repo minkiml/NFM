@@ -45,17 +45,17 @@ class EarlyStopping:
 
     def __call__(self, mse_, mae_, model, path):
         # if mse_ < self.best_MSE:
-        if mae_ < self.best_MAE:
-            self.save_checkpoint(mse_,mae_, model, path)
-            self.best_MAE = mae_
-            self.counter = 0
-        # if mse_ < self.best_MSE or mae_ < self.best_MAE:
+        # if mae_ < self.best_MAE:
         #     self.save_checkpoint(mse_,mae_, model, path)
-        #     if mse_ < self.best_MSE:
-        #         self.best_MSE = mse_ 
-        #     if mae_ < self.best_MAE:
-        #         self.best_MAE = mae_
+        #     self.best_MAE = mae_
         #     self.counter = 0
+        if mse_ < self.best_MSE or mae_ < self.best_MAE:
+            self.save_checkpoint(mse_,mae_, model, path)
+            if mse_ < self.best_MSE:
+                self.best_MSE = mse_ 
+            if mae_ < self.best_MAE:
+                self.best_MAE = mae_
+            self.counter = 0
         else:
             self.counter += 1
             self.logger.info(f'No validation improvement & EarlyStopping counter: {self.counter} out of {self.patience}')
@@ -154,7 +154,8 @@ class Solver(object):
                                             lft_norm= self.lft_norm,
                                             tau= self.tau,
                                             
-                                            loss_type= self.loss_type)
+                                            loss_type= self.loss_type,
+                                            norm_trick= self.norm_trick)
         self.model = model_constructor(self.hyper_variables)
         ipe = len(self.training_data)
         self.optimizer, self.lr_scheduler, self.wd_scheduler = opt_constructor(self.scheduler,
@@ -194,7 +195,7 @@ class Solver(object):
 
         if (epo % 10) == 0 or testing:
             pass
-            self.log.log_forecasting_vis(y_horizon_pred.cpu().detach().numpy(), y.cpu().detach().numpy(), name_ = f"{epo}" if not testing else "testing")
+            # self.log.log_forecasting_vis(y_horizon_pred.cpu().detach().numpy(), y.cpu().detach().numpy(), name_ = f"{epo}" if not testing else "testing")
         if testing:
             all_mse = ((all_pred - all_y)**2)[:,-1,:]
             self.log.log_forecasting_error_vis(all_mse)

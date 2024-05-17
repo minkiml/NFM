@@ -12,7 +12,7 @@ fs=$win_size #161 # 128
 random_seed=99
 run_id=14
 
-gpu_de=2
+gpu_de=0
 dsr=2
 input_length=$((win_size / dsr))
 ars=(0.5 1 1.5 2 2.5)

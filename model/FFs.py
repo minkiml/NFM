@@ -218,7 +218,7 @@ class INFF(nn.Module):
                                         var=True)
         self.inff_scale_bias = lft_scale_bias(self.hypervar_INFF,
                                               scale = True,
-                                              bias = True,
+                                              bias = False,
                                               std_ = 0.5)
 
         self.spec_filter = CV_projection(dim_in = vars.hidden_dim, dim_out = vars.hidden_dim,
@@ -229,8 +229,8 @@ class INFF(nn.Module):
     def forward(self, x, conditional = None, temporal_loc = None):
         B, F_, d_ = x.shape
         f_x = self.phi_INFF(tc = temporal_loc, L=self.hypervar_INFF.L_span,dev = x.device)
-        # f_x = (self.norm_out(f_x, None) + self.norm_out2(conditional, None).detach())
-        f_x = self.norm_out(f_x + conditional.detach())
+        f_x = (self.norm_out(f_x) + self.norm_out2(conditional).detach())
+        # f_x = self.norm_out(f_x + conditional.detach())
 
         f = self.hypervar_INFF.DFT_(f_x)
         f = self.spec_filter(f)

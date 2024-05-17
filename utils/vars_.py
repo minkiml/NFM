@@ -29,7 +29,9 @@ class HyperVariables(object):
                  lft_siren_hidden = 48,
                  lft_siren_omega = 30,
                  loss_type = "TFD",
-                 class_num = None):
+                 class_num = None,
+                 
+                 norm_trick = "mean_std"):
         # Gloabl logger
         log_loc = os.environ.get("log_loc")
         root_dir = os.getcwd() 
@@ -63,7 +65,7 @@ class HyperVariables(object):
         self.layer_num = layer_num # number of blocks (~ number of heads in hypernet) otherwise just number of filter layers
 
         self.dropout = dropout
-
+        self.norm_trick = norm_trick
         # Mode switching (training <--> testing)
         if sets_in_training == sets_in_testing: 
             self.sets_in_training = sets_in_training
@@ -71,7 +73,7 @@ class HyperVariables(object):
         else:
             self.sets_in_training = sets_in_training
             self.sets_in_testing = sets_in_testing
-
+        print(C_)
         self.C_true = C_
         self.channel_dependence = channel_dependence
         self.C_ = self.C_true if self.channel_dependence else 1

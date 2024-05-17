@@ -92,6 +92,8 @@ if __name__ == '__main__':
     parser.add_argument("--tau", type=str, default="independent", choices= ["independent", "shared"])
 
     # Forecasting params
+    parser.add_argument("--norm_trick", type=str, default= "mean", choices= ["mean", "mean_std"],  
+                        help = "Statistics to use in input normalization and output denormalization")
     parser.add_argument("--freq_span", type=int, default=-1, help = "-1 for full span modelling")
     parser.add_argument("--channel_dependence", type=int, default=1, help = "channel_dependence -- 1: True, 0: False (channel independent)")
     parser.add_argument("--look_back", type=int, default=720)

@@ -47,7 +47,7 @@ if __name__ == '__main__':
     parser.add_argument('--model_save_path', type=str, default='checkpoints')
     parser.add_argument('--anormly_ratio', type=float, default=4.00)
     parser.add_argument('--DSR', type=int, default=2, help = "m_f value. If set to 1, it is full reconstruction") 
-    parser.add_argument("--channel_dependence", type=int, default=1, help = "channel_dependence -- 1: True, 0: False (channel independent)")
+    parser.add_argument("--channel_dependence", type=int, default=0, help = "channel_dependence -- 1: True, 0: False (channel independent)")
     parser.add_argument('--masking', type=int, default=0)
     parser.add_argument('--plot', type=bool, default=False)
     parser.add_argument("--gpu_dev", type=str, default="6")

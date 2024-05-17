@@ -33,12 +33,11 @@ class NFM_AD(nn.Module):
         # Batch, Length, original channel dim
         x = self.hyper_vars.input_(x) # Channel independence
         B, L, C = x.shape 
-        # RevIN
         x_mean = torch.mean(x, dim=1, keepdim=True)
         x = x - x_mean   
         x_std=torch.sqrt(torch.var(x, dim=1, keepdim=True)+ 1e-5)
         x = x / x_std
-
+        
         # NFM
         z, _ , _, _, _= self.NFM_backbone(x) # (B, L_base, hidden) 
         
@@ -46,8 +45,8 @@ class NFM_AD(nn.Module):
         B, L, c = z.shape
         z_forward = self.projection_out(z)
 
-        # RevIN
-        z_forward = z_forward * x_std +x_mean 
+        z_forward = z_forward * x_std
+        z_forward = z_forward +x_mean 
         y, y_freq = self.hyper_vars.output_(z_forward)
 
         return y, y_freq

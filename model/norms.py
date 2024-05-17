@@ -31,7 +31,7 @@ class LayerNorm(nn.Module):
             self.b_2_LNF = nn.Parameter(torch.zeros(1,1,features))
         self.eps = eps
 
-    def forward(self, x, cond = None):
+    def forward(self, x):
         dim_ = x.dim()
         mean = x.mean(-1, keepdim=True) # over the vectors
         std = torch.sqrt(torch.var(x, dim=-1, keepdim=True)+ 1e-5)

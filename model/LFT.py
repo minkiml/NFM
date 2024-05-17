@@ -44,7 +44,7 @@ class LFT_block(nn.Module):
             # self.naive = nn.Parameter(torch.randn(1,self.hyper_vars_LFT.freq_span, self.hyper_vars_LFT.LFT_siren_hidden, dtype=torch.complex64) * 0.1)
 
         self.lft_scale_bias = lft_scale_bias(self.hyper_vars_LFT,
-                                       scale=False,
+                                       scale=True,
                                        bias=False,
                                        std_ =1.0)
         

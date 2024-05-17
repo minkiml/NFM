@@ -2,7 +2,7 @@
 export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
 run=1
 runs=5
-data_path_name='/data/home/mkim332/ts_project1/datas/AD/SMD'
+data_path_name='./datasets/anoamlyD_data/SMD'
 data=SMD
 
 pred_lens=0 # no m_t 
@@ -41,7 +41,6 @@ do
     --inff_siren_omega 30 \
     --layer_num 1 \
     --dropout 0.0 \
-    --droppath 1.0 \
     --std 0.06 \
     --siren_hidden 32 \
     --siren_in_dim 32\
@@ -80,7 +79,6 @@ for (( i=0; i<${runs}; i++ ));
         --inff_siren_omega 30 \
         --layer_num 1 \
         --dropout 0.0 \
-        --droppath 1.0 \
         --std 0.06 \
         --siren_hidden 32 \
         --siren_in_dim 32\

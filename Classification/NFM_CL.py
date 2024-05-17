@@ -41,7 +41,7 @@ class NFM_CL(nn.Module):
     
     def criterion_cl(self, logit, target):
         assert target.dim() == 1 and logit.dim() == 2
-        return F.cross_entropy(logit, target, label_smoothing=0.25)
+        return F.cross_entropy(logit, target, label_smoothing=0.1)
     
     def freeze_layers(self, layers = ["predictor"]):
         for name, param in self.named_parameters():

@@ -1,6 +1,6 @@
 # sh ./Forecasting/scripts/Weather.sh
 export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
-runs=4
+runs=1
 data_path_name='./datasets/forecasting_data'
 data=weather
 pred_lens=(96 192 336 720)
@@ -38,7 +38,7 @@ do
       --n_epochs 60 \
       --scheduler 0 \
       --description "" \
-      --gpu_dev 2 \
+      --gpu_dev 0 \
       --batch 2000 --batch_testing 200 --lr_ 0.0002
 done
 
@@ -78,7 +78,7 @@ do
       --n_epochs 40 \
       --scheduler 0 \
       --description "" \
-      --gpu_dev 2 \
+      --gpu_dev 0 \
       --batch 2000 --batch_testing 64 --lr_ 0.0002
 done
 done

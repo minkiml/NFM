@@ -87,7 +87,7 @@ if __name__ == '__main__':
     parser.add_argument("--siren_hidden", type=int, default=48)
     parser.add_argument("--siren_in_dim", type=int, default=4)
     parser.add_argument("--siren_omega", type=float, default=30.)
-    parser.add_argument("--lft_norm", type=int, default=1, help = "Whether to apply normalization to input spectrum in LFT")
+    parser.add_argument("--lft_norm", type=int, default=0, help = "Whether to apply normalization to input spectrum in LFT")
     parser.add_argument("--tau", type=str, default="independent", choices= ["independent", "shared"])
 
     # Classification params

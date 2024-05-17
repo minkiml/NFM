@@ -88,7 +88,9 @@ We provide fixed code samples and details that we used to replace their original
 
 ## Main Results
 
-NFM achieves the following state-of-the-art performances with only **27k** (forecasting), **37k** (classification), and **7.8k** (anomaly detection) parameters and *without a single architectural modification*:
+- NFM achieves the state-of-the-art performances across various time series tasks.
+- NFM is remarkably compact, only consuming **27k** (forecasting), **37k** (classification), and **7.8k** (anomaly detection) parameters and verstile as requiring no architectural modification to be specialized to the different tasks.
+- NFM learns function-to-function mapping (i.e., continuous time), and can generalize to time series with previously unseen sampling rate well without re-training.  
 
 ### Forecasting
 
