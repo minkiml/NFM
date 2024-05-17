@@ -51,7 +51,7 @@ We examplify ones in ETTm and speechcommand run scripts.
 ## Training & evaluation
 Once you have downloaded the necessary datasets, you are all set to run the experiments.
 
-There are run scrips and main&solver separated for each task. The main entrypoint is named *_main.py (e.g., [FC_main.py](FC_main.py) is the main entrypoint).    
+There are run scrips and main&solver separated for each task. The main entrypoint is named *_main.py for each task (e.g., [FC_main.py](FC_main.py) is the main entrypoint for forecasting task).    
 
 ### Forecasting
 To train NFM on the forecasting task, do
