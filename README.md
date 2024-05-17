@@ -1,11 +1,11 @@
 >📋  A template README.md for code accompanying a Machine Learning paper
 
-# Neural Fourier Space Modelling for Time Series
+# NFM: Neural Fourier Space Modelling for Time Series
 
-This repository is the official implementation of Neural Fourier Space Modelling for Time Series.
-<!-- [Neural Fourier Space Modelling for Time Series](https://arxiv.org/abs/2030.12345).  -->
+This repository is the official implementation of "NFM: Neural Fourier Space Modelling for Time Series".
+<!-- [Neural Fourier Space Modelling for Time Series](link).  -->
 
-Neural Fourier Space Modelling (NFM) which models time series directly in the Fourier domain is a compact and general solution to a range of time series problems. 
+*Neural Fourier Space Modelling (**NFM**) which models time series directly in the Fourier domain is **a compact yet powerful general solution** to a range of time series problems.*
 
 ![Overall workflow](images/Framework.png)
 
@@ -89,7 +89,8 @@ We provide fixed code samples and details that we used to replace their original
 ## Main Results
 
 - NFM achieves the state-of-the-art performances across various time series tasks.
-- NFM is remarkably compact, only consuming **27k** (forecasting), **37k** (classification), and **7.8k** (anomaly detection) parameters and verstile as requiring no architectural modification to be specialized to the different tasks.
+- NFM is remarkably compact, only consuming **27k** (forecasting), **37k** (classification), and **6.6k** (anomaly detection) parameters 
+- NFM is verstile as requiring no architectural modification to be specialized to the different tasks.
 - NFM learns function-to-function mapping (i.e., continuous time), and can generalize to time series with previously unseen sampling rate well without re-training.  
 
 ### Forecasting
@@ -102,17 +103,18 @@ At different testing-time sampling rate
 
 
 
-- We found a strong indication that the current forecasting models tend to focus more on global features (low frequency information) and less leverage on local features (high frequency information) as prediction horizon gets longer - See Appendix E.3 in our work. 
+- This result shows a strong indication that the current forecasting models tend to focus more on global features (low frequency information) and leverage less on local features (higher frequency information) as prediction horizon gets longer - See Appendix E.3 for analysis in our work. 
 
 ### Classification 
 NFM works well on both pre-processed features (MFCC) and long raw waveform of 16k in length, yielding overall 2nd top-tier performance (in conventional setup) and the least performance degradation (at different testing-time sampling rate).
 
 
 ### Aomaly detection
-NFM shows effectiveness in anomaly detection task, surpassing the baselines on ....
+NFM, which is formulated into a context learning setup, shows effectiveness in anomaly detection task.
 
-## How to use NFM for your own dataset and task
-We provide a short [demo](demo/simple_demo.ipynb) on how to apply NFM to one's own data and task.
+
+## How to use NFM on your own dataset and task
+We provide a short and quick [demo](demo/simple_demo.ipynb) on how to set up NFM and apply it to one's own data and task.
 
 ## Citation
 If you cite our work, 
