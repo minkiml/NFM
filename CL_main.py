@@ -87,7 +87,7 @@ if __name__ == '__main__':
     parser.add_argument("--siren_hidden", type=int, default=48)
     parser.add_argument("--siren_in_dim", type=int, default=4)
     parser.add_argument("--siren_omega", type=float, default=30.)
-    parser.add_argument("--lft_norm", type=int, default=0, help = "Whether to apply normalization to input spectrum in LFT")
+    parser.add_argument("--lft_norm", type=int, default=1, help = "Whether to apply normalization to input spectrum in LFT")
     parser.add_argument("--tau", type=str, default="independent", choices= ["independent", "shared"])
 
     # Classification params
@@ -96,8 +96,13 @@ if __name__ == '__main__':
     parser.add_argument("--dropped_rate", type=int, default=0, help = "iregular setting with dropping. e.g., 30, 50, 70") 
     parser.add_argument("--mfcc", type=int, default=1, help="processed (1:True) or raw (0:False)") 
     parser.add_argument("--num_class", type=int, default=10)
+    parser.add_argument("--CE_smoothing_scheduler", type=int, default=0)
     parser.add_argument("--channel_dependence", type=int, default=1, help = "1: True, 0: False (channel independent)")
     parser.add_argument("--freq_span", type=int, default=-1, help = "-1 for operating on full frequency span")
+
+    parser.add_argument("--temp_var1", type=float, default=0.2)
+    parser.add_argument("--temp_var2", type=int, default=128)
+    parser.add_argument("--temp_var3", type=str, default="TD")
 
     # IN-Out for training
     parser.add_argument(

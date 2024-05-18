@@ -130,6 +130,8 @@ class Solver(object):
                                             lft_siren_dim_in = self.siren_in_dim,
                                             lft_siren_hidden = self.siren_hidden,
                                             lft_siren_omega = self.siren_omega,
+                                            lft_norm= bool(self.lft_norm),
+                                            tau= self.tau,
                                             
                                             loss_type= self.loss_type)
         self.model = model_constructor(self.hyper_variables,
@@ -266,23 +268,16 @@ class Solver(object):
             if mode_ == "pointwise":
                 TD_loss = TD # (B, L)
                 FD_loss = 0.
-            # Segment-wise DEL
-            elif mode_ == "segwise":
-                TD_loss = TD.mean(dim = [1,2]) # (B)
-                FD_loss = FD.mean(dim = [1,2]) if self.hyper_variables.loss_type == "TFD"  else 0. # (B)
+        
             rec_loss = TD_loss + FD_loss
             cri = rec_loss.mean(-1)
             cri = cri.detach().cpu().numpy()
             attens_energy.append(cri)
             val_labels.append(labels)
-            cri2 = rec_loss.detach().cpu().numpy()
-            attens_energy2.append(cri2)
         # print(attens_energy)
         attens_energy = np.concatenate(attens_energy, axis=0).reshape(-1)
         train_energy = np.array(attens_energy)
 
-        attens_energy2 = np.concatenate(attens_energy2, axis=0).reshape(-1, self.output_c)
-        train_energy2 = np.array(attens_energy2)
         # (2) find the threshold 
         attens_energy = []
         for i, (input_data, labels) in enumerate(self.vali_loader): # thre_loader
@@ -300,12 +295,7 @@ class Solver(object):
             if mode_ == "pointwise":
                 TD_loss = TD.mean(-1) # (B, L)
                 FD_loss = 0.
-            # Segment-wise DEL
-            elif mode_ == "segwise":
-                TD_loss = TD.mean(dim = [1,2]) # (B)
-                FD_loss = FD.mean(dim = [1,2]) if self.hyper_variables.loss_type == "TFD"  else 0. # (B)
             rec_loss = TD_loss + FD_loss
-
             cri = rec_loss
             cri = cri.detach().cpu().numpy()
             attens_energy.append(cri)
@@ -318,15 +308,6 @@ class Solver(object):
         # thresh = test_energy.std(-1) * 2
         self.logger.info(f"train_energy: {train_energy.mean()}, test_energy{test_energy.mean()}")
         self.logger.info(f"Threshold : {thresh}")
-        
-        # val_labels = np.concatenate(val_labels, axis=0).reshape(-1)
-        # val_labels = np.array(val_labels)
-        # plt.figure()
-        # plt.plot(combined_energy, c="blue")
-        # plt.axhline(y=thresh, color='red', linestyle='--')
-        # plt.plot(val_labels.astype(int)*thresh, c="green")
-        # plt.ylim(0,10)
-        # plt.savefig(f'threshold_energy{self.dataset}.png')
 
         # (3) evaluation on the test set
         test_labels = []
@@ -345,10 +326,6 @@ class Solver(object):
             if mode_ == "pointwise":
                 TD_loss = TD # (B, L)
                 FD_loss = 0.
-            # Segment-wise (FITS) DEL
-            elif mode_ == "segwise":
-                TD_loss = TD.mean(dim = [1,2]) # (B)
-                FD_loss = FD.mean(dim = [1,2]) if self.hyper_variables.loss_type == "TFD"  else 0. # (B)
             rec_loss = TD_loss + FD_loss
 
             cri = rec_loss.mean(-1)
@@ -376,20 +353,10 @@ class Solver(object):
         # plt.plot(test_energy, c="blue")
         # plt.plot(test_labels.astype(int)* thresh, c="red")
         # plt.savefig(f'test_energy_{self.dataset}.png')
-        plt.figure()
-        plt.plot(y[0,:,0].detach().cpu().numpy(), c="blue")
-        plt.plot(input_data.float().to(self.device)[0,:,0].detach().cpu().numpy(), c="red")
-        plt.savefig(f'recon2_{self.dataset}.png')
-
-
-        test_score = np.sum(test_energy_2, axis=-1)
-        train_score = np.sum(train_energy2, axis=-1)
-        thresh2 = np.percentile(train_score, 100 - 0.5)
-        plt.figure()
-        plt.plot(test_score, c="blue", alpha = 0.5)
-        plt.plot(train_score, c="green", alpha = 0.5)
-        plt.axhline(y=thresh2, color='black', linestyle='--')
-        plt.savefig(f'train_energy vs test_energy {self.dataset}.png')
+        # plt.figure()
+        # plt.plot(y[0,:,0].detach().cpu().numpy(), c="blue")
+        # plt.plot(input_data.float().to(self.device)[0,:,0].detach().cpu().numpy(), c="red")
+        # plt.savefig(f'recon2_{self.dataset}.png')
 
         pred = (test_energy > thresh).astype(int)
 

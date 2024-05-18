@@ -31,7 +31,13 @@ class HyperVariables(object):
                  loss_type = "TFD",
                  class_num = None,
                  
-                 norm_trick = "mean_std"):
+                 norm_trick = "mean_std",
+                 CE_smoothing_scheduler = False,
+
+                 temp_v = 0.2,
+                 temp_v2 = 128,
+                 temp_v3 = "mean",
+                 ff_projection_ex = 3):
         # Gloabl logger
         log_loc = os.environ.get("log_loc")
         root_dir = os.getcwd() 
@@ -39,8 +45,14 @@ class HyperVariables(object):
                             format = '%(asctime)s - %(name)s - %(message)s')
         self.logger = logging.getLogger('From hyper_vars')
         
+        self.temp_v = temp_v
+        self.temp_v2 = temp_v2
+        self.temp_v3 = temp_v3
+        self.proj_factor = ff_projection_ex
+
         self.loss_type = loss_type 
         self.class_num = class_num
+        self.CE_smoothing_scheduler = CE_smoothing_scheduler
         # Init params #
         self.init_std = 0.06 
         self.init_mean = 0.

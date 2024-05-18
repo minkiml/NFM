@@ -41,7 +41,7 @@ class mixer_block(nn.Module):
             
         self.TD_filter_NFF = PositionwiseFeedForward(hidden_dim, hidden_dim * hidden_factor, 
                                                  dropout=dropout, 
-                                                 activation = "ReLU2",
+                                                 activation = "ReLU2", # ReLU2
                                                  type_ = "linear",
                                                  layer_id= layer_id,
                                                  std= self.hyper_vars_NFF.init_std,

@@ -28,11 +28,11 @@ class LFT_block(nn.Module):
                                             nl = "mix")
             self.norm_out = NormalizationLayer(norm = "InstanceNorm", 
                                 hidden = self.hyper_vars_LFT.hidden_dim, 
-                                affine = True)
+                                affine = False)
             if self.hyper_vars_LFT.LFT_nomalization: 
                 self.norm_out2 = NormalizationLayer(norm = "InstanceNorm", 
                                 hidden = self.hyper_vars_LFT.hidden_dim, 
-                                affine = True)
+                                affine = False)
             else:
                 self.norm_out2 = nn.Identity()
         
@@ -44,7 +44,7 @@ class LFT_block(nn.Module):
             # self.naive = nn.Parameter(torch.randn(1,self.hyper_vars_LFT.freq_span, self.hyper_vars_LFT.LFT_siren_hidden, dtype=torch.complex64) * 0.1)
 
         self.lft_scale_bias = lft_scale_bias(self.hyper_vars_LFT,
-                                       scale=True,
+                                       scale=False,
                                        bias=False,
                                        std_ =1.0)
         

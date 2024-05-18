@@ -3,6 +3,7 @@ import torch.nn.functional as F
 import torch
 import logging
 import os
+import math
 from model.NFM_backbone import NFM_general
 from utils.vars_ import HyperVariables
 from Classification.predictor import Classifier
@@ -22,8 +23,11 @@ class NFM_CL(nn.Module):
         self.predictor = Classifier(vars = self.hyper_vars,
                                         factor_reduce = 1,
                                         pooling_method = "AVG",
-                                        processing ="mean")
+                                        processing =self.hyper_vars.temp_v3 # "mean"
+                                        )
         self.softmax = nn.Softmax(dim = 1)
+
+        self.temp = self.hyper_vars.temp_v
     def forward(self, x):
         x = self.hyper_vars.input_(x)
         B, L, C = x.shape 
@@ -41,8 +45,36 @@ class NFM_CL(nn.Module):
     
     def criterion_cl(self, logit, target):
         assert target.dim() == 1 and logit.dim() == 2
-        return F.cross_entropy(logit, target, label_smoothing=0.1)
+        self.smoothing_rate_step()
+        return F.cross_entropy(logit, target, label_smoothing=self.temp)
     
+    def smoothing_rate_step(self):
+        if self.hyper_vars.CE_smoothing_scheduler:
+            self._step += 1
+            if self._step < self.warmup_steps:
+                progress = float(self._step) / float(max(1, self.warmup_steps))
+
+                new_rate = self.start_rate + progress * (self.ref_rate - self.start_rate)
+            else:
+                # -- consine annealing after warmup
+                progress = float(self._step - self.warmup_steps) / float(max(1, self.T_max))
+                new_rate = self.final_rate + (self.ref_rate - self.final_rate) * 0.5 * (1. + math.cos(math.pi * progress))
+            
+            if new_rate > 0.45:
+                new_rate = 0.45
+                self.hyper_vars.CE_smoothing_scheduler = False
+            elif new_rate < 0.:
+                new_rate = 0.
+                self.hyper_vars.CE_smoothing_scheduler = False
+            self.temp = new_rate
+    def smoothing_rate_reset(self, warmup_steps, start_rate, ref_rate, final_rate, T_max):
+        self.start_rate = start_rate
+        self.ref_rate = ref_rate
+        self.final_rate = final_rate
+        self.warmup_steps = warmup_steps
+        self.T_max = T_max - warmup_steps
+        self._step = 0.
+
     def freeze_layers(self, layers = ["predictor"]):
         for name, param in self.named_parameters():
             if name in layers: 

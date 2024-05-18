@@ -72,7 +72,10 @@ def opt_constructor(scheduler,
                 ref_wd=start_wd,
                 final_wd=final_wd,
                 T_max=fianl_step)
-        
+            
+        logger.info(f"Warm up steps: {warm_up}")
+        logger.info(f"Final steps: {fianl_step}")
+
         logger.info("Optimizer (AdamW) with wd and lr scheduler construction was successful")
         return opt, scheduler, wd_scheduler
 

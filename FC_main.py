@@ -82,6 +82,7 @@ if __name__ == '__main__':
     parser.add_argument("--layer_num", type=int, default=1)
     parser.add_argument("--dropout", type=float, default=0.3)
     parser.add_argument("--filter_type", type=str, default="INFF", choices=["INFF", "FNO", "AFNO", "GFN", "AFF"])
+    parser.add_argument("--ff_projection_ex", type=int, default=3)
 
     # LFT (based on siren) params
     parser.add_argument("--lft", type=int, default=1)
@@ -92,12 +93,14 @@ if __name__ == '__main__':
     parser.add_argument("--tau", type=str, default="independent", choices= ["independent", "shared"])
 
     # Forecasting params
-    parser.add_argument("--norm_trick", type=str, default= "mean", choices= ["mean", "mean_std"],  
+    parser.add_argument("--norm_trick", type=str, default= "mean_std", choices= ["mean", "mean_std"],  
                         help = "Statistics to use in input normalization and output denormalization")
     parser.add_argument("--freq_span", type=int, default=-1, help = "-1 for full span modelling")
     parser.add_argument("--channel_dependence", type=int, default=1, help = "channel_dependence -- 1: True, 0: False (channel independent)")
     parser.add_argument("--look_back", type=int, default=720)
     parser.add_argument("--horizon", type=int, default=96)
+
+    parser.add_argument("--temp_var2", type=int, default=128, help = "-1 for operating on full frequency span")
 
     # IN-Out for training
     parser.add_argument(

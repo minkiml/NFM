@@ -210,7 +210,7 @@ class INFF(nn.Module):
 
         self.norm_out = NormalizationLayer(norm = "InstanceNorm", 
                                         hidden = vars.hidden_dim , 
-                                        affine = True,
+                                        affine = False,
                                         var=True)
         self.norm_out2 = NormalizationLayer(norm = "InstanceNorm",
                                         hidden = vars.hidden_dim, 
@@ -218,7 +218,7 @@ class INFF(nn.Module):
                                         var=True)
         self.inff_scale_bias = lft_scale_bias(self.hypervar_INFF,
                                               scale = True,
-                                              bias = False,
+                                              bias = True,
                                               std_ = 0.5)
 
         self.spec_filter = CV_projection(dim_in = vars.hidden_dim, dim_out = vars.hidden_dim,
@@ -229,10 +229,21 @@ class INFF(nn.Module):
     def forward(self, x, conditional = None, temporal_loc = None):
         B, F_, d_ = x.shape
         f_x = self.phi_INFF(tc = temporal_loc, L=self.hypervar_INFF.L_span,dev = x.device)
-        f_x = (self.norm_out(f_x) + self.norm_out2(conditional).detach())
-        # f_x = self.norm_out(f_x + conditional.detach())
+        
+        # f_x = (self.norm_out(f_x) + self.norm_out2(conditional).detach())
+        # f_x = (self.norm_out(f_x) + self.norm_out2(conditional.detach()))
 
+        # f_x = (self.norm_out(f_x) + conditional.detach()) # 1)
+
+        f_x = self.norm_out(f_x) # 1)
         f = self.hypervar_INFF.DFT_(f_x)
+
+        x_cond = self.hypervar_INFF.DFT_(self.norm_out2(conditional)).detach()
+
+        # f = torch.cat((f.squeeze(0).expand(B,-1,-1),x_cond), dim = -1) # 2)
+        f = f + x_cond # 3)
+
+
         f = self.spec_filter(f)
      
         if self.hypervar_INFF.freq_span < self.hypervar_INFF.f_base:
@@ -240,5 +251,6 @@ class INFF(nn.Module):
         _, F_, d_ = f.shape
         assert x.shape[1] == f.shape[1]
         f = self.inff_scale_bias(f)
+
         x *=f
         return x, f, f_x

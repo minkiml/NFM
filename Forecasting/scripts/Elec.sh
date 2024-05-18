@@ -1,6 +1,6 @@
 # sh ./Forecasting/scripts/Elec.sh
 export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
-runs=4
+runs=1
 
 pred_lens=(96 192 336 720)
 look_backs=(720 720 720 720)
@@ -44,6 +44,6 @@ do
       --ref_lr 0.00035 \
       --start_lr 0.00035 \
       --description "_" \
-      --gpu_dev 1 \
+      --gpu_dev 3 \
       --batch 1000 --batch_testing 16 --lr_ 0.0001
 done

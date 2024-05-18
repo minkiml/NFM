@@ -138,7 +138,7 @@ class Solver(object):
                                             inff_siren_omega = self.inff_siren_omega,
                                             layer_num = self.layer_num,
                                             lft = bool(self.lft),
-                                            lft_norm= self.lft_norm,
+                                            lft_norm= bool(self.lft_norm),
                                             tau= self.tau,
 
                                             lft_siren_dim_in = self.siren_in_dim,
@@ -146,7 +146,11 @@ class Solver(object):
                                             lft_siren_omega = self.siren_omega,
                                             
                                             loss_type= self.loss_type,
-                                            class_num = self.num_class)
+                                            class_num = self.num_class,
+                                            CE_smoothing_scheduler = bool(self.CE_smoothing_scheduler),
+                                            temp_v= self.temp_var1,
+                                            temp_v2= self.temp_var2,
+                                            temp_v3= self.temp_var3)
         self.model = model_constructor(self.hyper_variables)
 
         ipe = len(self.training_data)
@@ -154,14 +158,18 @@ class Solver(object):
                                                                             self.model,
                                                                             lr = self.lr_,
 
-                                                                            warm_up = int(self.n_epochs* ipe * self.warm_up),
-                                                                            fianl_step = int(self.n_epochs* ipe),
+                                                                            warm_up = self.n_epochs* ipe * self.warm_up , #int(self.n_epochs* ipe * self.warm_up),
+                                                                            fianl_step = self.n_epochs* ipe, #int(self.n_epochs* ipe),
                                                                             start_lr = self.start_lr,
                                                                             ref_lr = self.ref_lr,
                                                                             final_lr = self.final_lr,
                                                                             start_wd = self.start_wd,
                                                                             final_wd = self.final_wd)
-
+        self.model.smoothing_rate_reset(warmup_steps = self.n_epochs* ipe * 0.1 , #int(self.n_epochs* ipe * self.warm_up),
+                                        T_max = self.n_epochs* ipe, #int(self.n_epochs* ipe),
+                                        start_rate = 0.4,
+                                        ref_rate = 0.4,
+                                        final_rate = 0.15)
         if torch.cuda.is_available():
             self.model.to(self.device)
 

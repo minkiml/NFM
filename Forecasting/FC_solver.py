@@ -151,11 +151,13 @@ class Solver(object):
                                             lft_siren_dim_in = self.siren_in_dim,
                                             lft_siren_hidden = self.siren_hidden,
                                             lft_siren_omega = self.siren_omega,
-                                            lft_norm= self.lft_norm,
+                                            lft_norm= bool(self.lft_norm),
                                             tau= self.tau,
                                             
                                             loss_type= self.loss_type,
-                                            norm_trick= self.norm_trick)
+                                            norm_trick= self.norm_trick,
+                                            temp_v2= self.temp_var2,
+                                            ff_projection_ex = self.ff_projection_ex)
         self.model = model_constructor(self.hyper_variables)
         ipe = len(self.training_data)
         self.optimizer, self.lr_scheduler, self.wd_scheduler = opt_constructor(self.scheduler,

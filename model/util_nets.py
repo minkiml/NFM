@@ -133,7 +133,7 @@ class PositionwiseFeedForward(nn.Module):
         else:
             self.activation = nn.Identity()
         
-        self.weight_initalization(init_=init_)
+        self.weight_initalization(layer_id = layer_id, init_=init_)
     def forward(self, x):
         if self.type_ != "linear":
             x = x.permute(0,2,1)
@@ -264,7 +264,7 @@ class Siren_block(nn.Module):
         self.hidden_dim = hidden_dim
         if self.hyper_var_siren.tau_in_inrs == "independent":
             self.FF_mapping = fourier_mapping(ff_dim = siren_dim_in,  
-                                                ff_sigma=128,
+                                                ff_sigma=self.hyper_var_siren.temp_v2, # !!
                                                 learnable_ff = True, 
                                                 ff_type = "gaussian", # deterministic_exp  gaussian
                                                 L = self.hyper_var_siren.L_base)

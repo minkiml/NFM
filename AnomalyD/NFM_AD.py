@@ -27,7 +27,7 @@ class NFM_AD(nn.Module):
         self.mask_ = mask_
         if mask_:
             self.masking = torch.ones(self.hyper_vars.L_base)
-            self.masking[1::dsr] = 0.
+            self.masking[0::dsr] = 0.
             self.num_masked = len(torch.where(self.masking == 0.)[0])
     def forward(self, x):
         # Batch, Length, original channel dim

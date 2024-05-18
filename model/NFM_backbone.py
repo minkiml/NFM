@@ -17,13 +17,13 @@ class NFM_general(nn.Module):
         self.projection_in = nn.Linear(self.hyper_var_nfm.C_, self.hyper_var_nfm.hidden_dim, 
                                        bias = False)
         self.skip_connection = nn.Sequential(
-                                           nn.Linear(self.hyper_var_nfm.C_, self.hyper_var_nfm.hidden_dim * 3, 
-                                bias = True),
-                                mul_omega(feature_dim = self.hyper_var_nfm.hidden_dim * 3, 
+                                           nn.Linear(self.hyper_var_nfm.C_, self.hyper_var_nfm.hidden_dim * self.hyper_var_nfm.proj_factor, 
+                                bias = False),
+                                mul_omega(feature_dim = self.hyper_var_nfm.hidden_dim * self.hyper_var_nfm.proj_factor, 
                                 omega = 1,
                                 omega_learnable = False),
                                 Periodic_activation(nl="mix"),#nn.LeakyReLU(0.2),
-                                nn.Linear(self.hyper_var_nfm.hidden_dim * 3, self.hyper_var_nfm.hidden_dim, 
+                                nn.Linear(self.hyper_var_nfm.hidden_dim * self.hyper_var_nfm.proj_factor, self.hyper_var_nfm.hidden_dim, 
                                 bias = False)
                                 )
         # self.skip_connection = GLU_projection(dim_in=self.hyper_var_nfm.C_,
@@ -46,11 +46,11 @@ class NFM_general(nn.Module):
 
         self.ll_NFF =PositionwiseFeedForward(self.hyper_var_nfm.hidden_dim, self.hyper_var_nfm.hidden_dim, 
                                             dropout=dropout, 
-                                            activation = "GeLU", #"GeLU",
+                                            activation = "ReLU2", #"GeLU",
                                             out_dim= self.hyper_var_nfm.hidden_dim,
                                             std= self.hyper_var_nfm.init_std,
                                             bias=False,
-                                            init_= 1)
+                                            init_= 2)
         if self.hyper_var_nfm.tau_in_inrs == "shared":
             self.FF_mapping = fourier_mapping(ff_dim = self.hyper_var_nfm.LFT_siren_hidden,  
                                             ff_sigma=256,
