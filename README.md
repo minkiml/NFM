@@ -95,7 +95,7 @@ We provide fixed code samples and details that we used to replace their original
 
 Conventional setup (input and ouput resolution are the same)
 
-![Forecasting results](images/forecasting_sr_result.PNG)
+![Forecasting results](images/forecasting_result.PNG)
 
 At different testing-time sampling rate
 
