@@ -122,15 +122,14 @@ class Solver(object):
                             ('%.5f', 'lr'),
                             ('%.5f', 'wd'),
                             ('%.4e', 'forecaster_'), 
-                            ('%.4e', 'projection_out'), 
+                            ('%.4e', 'll_NFF'), 
                             ('%.4e', 'projection_in'),
 
                             ('%.4e', 'NFF_block'),
-                            ('%.4e', 'spec_filter'),
+                            ('%.4e', 'cv_mlp'),
                             
-                            ('%.4e', 'TD-filter'),
+                            ('%.4e', 'channel_mixer'),
                             ('%.4e', 'LFT'),
-                            ('%.4e', 'NFF_FL')
                             )
         
     def build_model(self):
@@ -156,7 +155,6 @@ class Solver(object):
                                             
                                             loss_type= self.loss_type,
                                             norm_trick= self.norm_trick,
-                                            temp_v2= self.temp_var2,
                                             ff_projection_ex = self.ff_projection_ex)
         self.model = model_constructor(self.hyper_variables)
         ipe = len(self.training_data)
@@ -184,7 +182,7 @@ class Solver(object):
                 input = x.to(self.device)######################
                 y = y.to(self.device)
 
-                y_full, y_freq, y_horizon_pred, freq , f_token, zz, xx = self.model(input)
+                y_full, y_freq, y_horizon_pred = self.model(input)
 
                 if i == 0:
                     all_pred = y_horizon_pred
@@ -197,7 +195,7 @@ class Solver(object):
 
         if (epo % 10) == 0 or testing:
             pass
-            # self.log.log_forecasting_vis(y_horizon_pred.cpu().detach().numpy(), y.cpu().detach().numpy(), name_ = f"{epo}" if not testing else "testing")
+            self.log.log_forecasting_vis(y_horizon_pred.cpu().detach().numpy(), y.cpu().detach().numpy(), name_ = f"{epo}" if not testing else "testing")
         if testing:
             all_mse = ((all_pred - all_y)**2)[:,-1,:]
             self.log.log_forecasting_error_vis(all_mse)
@@ -212,14 +210,12 @@ class Solver(object):
         early_stopping = EarlyStopping(patience=self.patience, verbose=True, dataset_name=self.dataset, logger=self.logger)
         train_steps = len(self.training_data)
         self.logger.info(f'train_steps: {train_steps}')
-        lamda_ = 0.5
         for epoch in range(self.n_epochs):
             speed_t = []
             epoch_time = time.time()
             self.model.train()
             self.hyper_variables.training_set()
             for i, (x, y, f_fullspan) in enumerate(self.training_data):
-                time1 = time.time()
                 x = x.to(self.device)######################
                 y = y.to(self.device)
                 
@@ -232,7 +228,7 @@ class Solver(object):
                 
                 per_itr_time = time.time()
 
-                y_pred, y_freq, y_horizon_pred, _ , _, _, _ = self.model(x)
+                y_pred, y_freq, y_horizon_pred = self.model(x)
                 TD_loss, FD_loss = self.model.criterion(pred_TD = y_horizon_pred, target_TD = y.detach(), 
                                                     
                                                     pred_FD = y_freq, target_FD = f_fullspan.detach(),
@@ -251,30 +247,28 @@ class Solver(object):
                 self.loss_FD.update(FD_loss.item())
                 self.loss_total.update(loss.item())
                 
-                grad_stats_AC = grad_logger_spec(self.model.named_parameters(), prob_ = "forecaster_", off= False) # // # 'LFTLayer_1'  learnable_freq_base_real_AC
-                grad_stats_conv_IMAG = grad_logger_spec(self.model.named_parameters(), prob_ = "projection_out", off= False) # 'LFTLayers'  learnable_freq_base_imag
-                grad_stats_exp_real = grad_logger_spec(self.model.named_parameters(), prob_ = "projection_in", off= False)
-                grad_stats_1 = grad_logger_spec(self.model.named_parameters(), prob_ = "phi_INFF", off= False) # // # 'LFTLayer_1'  learnable_freq_base_real_AC
-                grad_stats_2 = grad_logger_spec(self.model.named_parameters(), prob_ = "spec_filter", off= False) # 'LFTLayers'  learnable_freq_base_imag
-                grad_stats_3 = grad_logger_spec(self.model.named_parameters(), prob_ = "TD_filter_NFF", off= False)
-                grad_stats_4 = grad_logger_spec(self.model.named_parameters(), prob_ = "FT_generator", off= False)
-                grad_stats_5 = grad_logger_spec(self.model.named_parameters(), prob_ = "ll_NFF", off= False)
+                # grad_stats_AC = grad_logger_spec(self.model.named_parameters(), prob_ = "forecaster_", off= False) 
+                # grad_stats_conv_IMAG = grad_logger_spec(self.model.named_parameters(), prob_ = "ll_NFF", off= False) 
+                # grad_stats_exp_real = grad_logger_spec(self.model.named_parameters(), prob_ = "projection_in", off= False)
+                # grad_stats_1 = grad_logger_spec(self.model.named_parameters(), prob_ = "phi_INFF", off= False) 
+                # grad_stats_2 = grad_logger_spec(self.model.named_parameters(), prob_ = "cv_mlp", off= False) 
+                # grad_stats_3 = grad_logger_spec(self.model.named_parameters(), prob_ = "channel_mixer", off= False)
+                # grad_stats_4 = grad_logger_spec(self.model.named_parameters(), prob_ = "FT_generator", off= False)
 
-                self.log.log_into_csv_(epoch+1,
-                                            i,
-                                            self.loss_TD.avg,
-                                            self.loss_FD.avg,
-                                            _new_lr if self.lr_scheduler is not None else 0.,
-                                            _new_wd if self.wd_scheduler is not None else 0.,
-                                            grad_stats_AC.avg,
-                                            grad_stats_conv_IMAG.avg,
-                                            grad_stats_exp_real.avg,
+                # self.log.log_into_csv_(epoch+1,
+                #                             i,
+                #                             self.loss_TD.avg,
+                #                             self.loss_FD.avg,
+                #                             _new_lr if self.lr_scheduler is not None else 0.,
+                #                             _new_wd if self.wd_scheduler is not None else 0.,
+                #                             grad_stats_AC.avg,
+                #                             grad_stats_conv_IMAG.avg,
+                #                             grad_stats_exp_real.avg,
                                             
-                                            grad_stats_1.avg,
-                                            grad_stats_2.avg,
-                                            grad_stats_3.avg,
-                                            grad_stats_4.avg,
-                                            grad_stats_5.avg)
+                #                             grad_stats_1.avg,
+                #                             grad_stats_2.avg,
+                #                             grad_stats_3.avg,
+                #                             grad_stats_4.avg)
                 if (i + 1) % 100 == 0:
                     self.logger.info(f"epoch[{epoch+1}/{self.n_epochs}] & s/iter:{np.mean(speed_t): .5f}, left time: {np.mean(speed_t) * (train_steps - i): .5f}, Loss_TD:{self.loss_TD.avg: .4f} , Loss_FD:{self.loss_FD.avg: .4f} , Loss_total: {self.loss_total.avg: .4f}")
                 
@@ -310,7 +304,7 @@ class Solver(object):
 
     def complexity_test(self):
         self.model.eval()
-        self.logger.info("======================Complexity Test======================")
+        self.logger.info("======================Complexity======================")
         self.hyper_variables.testing_set() # This alters m_t or m_f in model for testing (if applied)
         self.model.eval()
 

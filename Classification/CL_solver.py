@@ -74,9 +74,6 @@ class Solver(object):
         self.logger = logging.getLogger('Solver')
         data = Load_dataset({"data_path": self.data_path,
                                     "sub_dataset": self.dataset,
-                                    "ucr_dataset": self.mod,
-                                    "varset_train": self.vars_in_train,
-                                    "varset_test": self.vars_in_test,
 
                                     "sr_train": self.sr_train,
                                     "sr_test": self.sr_test,
@@ -114,13 +111,12 @@ class Solver(object):
                             ('%.5f', 'lr'),
                             ('%.5f', 'wd'),
                             ('%.4e', 'INFF'), 
-                            ('%.4e', 'filter_spec'), 
+                            ('%.4e', 'cv_mlp'), 
                             ('%.4e', 'LTF'), 
                             ('%.4e', 'projection_in'),
                             ('%.4e', 'final_layer'),
-                            ('%.4e', 'conditional'),
                             ('%.4e', 'classifier'),
-                            ('%.4e', 'TD_filter_NFF')
+                            ('%.4e', 'channel mixing')
                             )
         self.count = 70 if self.mfcc == 1 else 50
     def build_model(self):
@@ -145,12 +141,10 @@ class Solver(object):
                                             lft_siren_hidden = self.siren_hidden,
                                             lft_siren_omega = self.siren_omega,
                                             
-                                            loss_type= self.loss_type,
                                             class_num = self.num_class,
                                             CE_smoothing_scheduler = bool(self.CE_smoothing_scheduler),
-                                            temp_v= self.temp_var1,
-                                            temp_v2= self.temp_var2,
-                                            temp_v3= self.temp_var3)
+                                            ff_std= self.ff_std,
+                                            init_xaviar= bool(self.init_xaviar))
         self.model = model_constructor(self.hyper_variables)
 
         ipe = len(self.training_data)
@@ -187,7 +181,6 @@ class Solver(object):
                 else:
                     all_pred = torch.cat((all_pred, y_pred), dim = 0)
                     all_y = torch.cat((all_y, y), dim = 0)
-        print(x.shape)
         all_pred = all_pred.detach().cpu().numpy()
         all_y = all_y.detach().cpu().numpy()
         num_ = all_pred.shape[0]
@@ -242,27 +235,25 @@ class Solver(object):
                 speed_t.append(time.time() - per_itr_time)
 
                 self.loss_CE.update(CE_loss.item())
-                grad_stats_AC = grad_logger_spec(self.model.named_parameters(), prob_ = "phi_INFF") # // # 'LFTLayer_1'  learnable_freq_base_real_AC
-                grad_stats_conv_1 = grad_logger_spec(self.model.named_parameters(), prob_ = "spec_filter") # 'LFTLayers'  learnable_freq_base_imag
-                grad_stats_conv_2 = grad_logger_spec(self.model.named_parameters(), prob_ = "FT_generator") # 'LFTLayers'  learnable_freq_base_imag
-                grad_stats_exp_real = grad_logger_spec(self.model.named_parameters(), prob_ = "projection_in")
-                grad_stats_3 = grad_logger_spec(self.model.named_parameters(), prob_ = "ll_NFF")
-                grad_stats_4 = grad_logger_spec(self.model.named_parameters(), prob_ = "conditional_")
-                grad_stats_5 = grad_logger_spec(self.model.named_parameters(), prob_ = "classifier")
-                grad_stats_6 = grad_logger_spec(self.model.named_parameters(), prob_ = "TD_filter_NFF")
-                self.log.log_into_csv_(epoch+1,
-                                            i,
-                                            self.loss_CE.avg,
-                                            _new_lr if self.lr_scheduler is not None else 0.,
-                                            _new_wd if self.wd_scheduler is not None else 0.,
-                                            grad_stats_AC.avg,
-                                            grad_stats_conv_1.avg,
-                                            grad_stats_conv_2.avg,
-                                            grad_stats_exp_real.avg,
-                                            grad_stats_3.avg,
-                                            grad_stats_4.avg,
-                                            grad_stats_5.avg,
-                                            grad_stats_6.avg)
+                # grad_stats_AC = grad_logger_spec(self.model.named_parameters(), prob_ = "phi_INFF") 
+                # grad_stats_conv_1 = grad_logger_spec(self.model.named_parameters(), prob_ = "cv_mlp") 
+                # grad_stats_conv_2 = grad_logger_spec(self.model.named_parameters(), prob_ = "FT_generator") 
+                # grad_stats_exp_real = grad_logger_spec(self.model.named_parameters(), prob_ = "projection_in")
+                # grad_stats_3 = grad_logger_spec(self.model.named_parameters(), prob_ = "phi_INFF")
+                # grad_stats_5 = grad_logger_spec(self.model.named_parameters(), prob_ = "classifier")
+                # grad_stats_6 = grad_logger_spec(self.model.named_parameters(), prob_ = "channel_mixer")
+                # self.log.log_into_csv_(epoch+1,
+                #                             i,
+                #                             self.loss_CE.avg,
+                #                             _new_lr if self.lr_scheduler is not None else 0.,
+                #                             _new_wd if self.wd_scheduler is not None else 0.,
+                #                             grad_stats_AC.avg,
+                #                             grad_stats_conv_1.avg,
+                #                             grad_stats_conv_2.avg,
+                #                             grad_stats_exp_real.avg,
+                #                             grad_stats_3.avg,
+                #                             grad_stats_5.avg,
+                #                             grad_stats_6.avg)
                 if (i + 1) % 100 == 0:
                     self.logger.info(f"epoch[{epoch+1}/{self.n_epochs}] & s/iter:{np.mean(speed_t): .5f}, left time: {np.mean(speed_t) * (train_steps - i): .5f}, Loss_CE:{self.loss_CE.avg: .4f}")
 
@@ -318,7 +309,7 @@ class Solver(object):
                 input = x.to(self.device)######################
                 y = y.to(self.device)
                 start_time = time.time()
-                y_pred, _, _, _ = self.model(input)
+                y_pred = self.model(input)
                 end_time = time.time()
                 break;
         peak_memory_after = torch.cuda.max_memory_allocated(self.device)

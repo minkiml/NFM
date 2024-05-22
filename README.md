@@ -97,21 +97,23 @@ We provide fixed code samples and details that we used to replace their original
 
 Conventional setup (input and ouput resolution are the same)
 
-
+![Forecasting results](images/forecasting_results.png)
 
 At different testing-time sampling rate
 
-
+![Forecasting SR results](images/forecasting_sr_result.PNG)
 
 - This result shows a strong indication that the current forecasting models tend to focus more on global features (low frequency information) and leverage less on local features (higher frequency information) as prediction horizon gets longer - See Appendix E.3 for analysis in our work. 
 
 ### Classification 
 NFM works well on both pre-processed features (MFCC) and long raw waveform of 16k in length, yielding overall 2nd top-tier performance (in conventional setup) and the least performance degradation (at different testing-time sampling rate).
 
+![Classification results](images/classification_result.PNG)
 
-### Aomaly detection
+### Anomaly detection
 NFM, which is formulated into a context learning setup, shows effectiveness in anomaly detection task.
 
+![Anomaly detection results](images/ad_result.PNG)
 
 ## How to use NFM on your own dataset and task
 We provide a short and quick [demo](demo/simple_demo.ipynb) on how to set up NFM and apply it to one's own data and task.

@@ -2,22 +2,17 @@ import os
 import logging
 from torch.utils.data import DataLoader
 from Classification.data_factory.speech_dataset.speech_commands import SpeechCommands
-from Classification.data_factory.char_dataset.char_trajectories import CharTrajectories # del
-from Classification.data_factory.UCR_dataset.ucr_load import UCR # del
+
 class classification_dataset(object):
     def __init__(
                 # Loaded dataset
                 self, 
                 path = "",
                 sub_dataset = "SpeechCommands",
-                mod = "", # UCR #del
                 sr_train = 1,
                 sr_test = 1,
                 mfcc = 1,
                 dropped_rate = 0,
-
-                varset_train = [784, 784, 0, 784], # [Fs, F_in, L_out (horizon), L_in (lookback)]
-                varset_test = [784, 784, 0, 784],
 
                 batch_training = 32,
                 batch_testing = 32,
@@ -30,7 +25,6 @@ class classification_dataset(object):
         self.logger = logging.getLogger('From classification dataset')
         self.path = path
         self.sub_dataset = sub_dataset
-        self.mod = mod
 
         self.mfcc = mfcc
         self.drop_rate = dropped_rate
@@ -45,9 +39,7 @@ class classification_dataset(object):
         # Check if the dataset already exists in the root directory
 
         dataset = {
-            "SpeechCommands": SpeechCommands,
-            "CharTrajectories": CharTrajectories, #del
-            "UCR": UCR #del
+            "SpeechCommands": SpeechCommands
         }[self.sub_dataset]
 
         training_set = dataset(
@@ -56,8 +48,7 @@ class classification_dataset(object):
             mfcc=self.mfcc,
             sr=self.sr_train,
             dropped_rate=self.drop_rate,
-            batch_size=self.batch_training,
-            mod = self.mod
+            batch_size=self.batch_training
         )
         test_set = dataset(
             partition="test",
@@ -67,12 +58,10 @@ class classification_dataset(object):
             if self.sr_test == 0
             else self.sr_test,  # Test set can be sample differently.
             dropped_rate=self.drop_rate,
-            batch_size=self.batch_testing,
-            mod = self.mod
+            batch_size=self.batch_testing
         )
         if self.sub_dataset in [
-                "SpeechCommands",
-                "CharTrajectories", #del
+                "SpeechCommands"
             ]:
             validation_set = dataset(
                 partition="val",
@@ -80,8 +69,7 @@ class classification_dataset(object):
                 mfcc=self.mfcc,
                 sr=self.sr_train,
                 dropped_rate=self.drop_rate,
-                batch_size=self.batch_training,
-                mod = self.mod
+                batch_size=self.batch_training
             )
         else: validation_set = test_set
 
@@ -93,8 +81,7 @@ class classification_dataset(object):
             mfcc=self.mfcc,
             sr=2,  # Test set can be sample differently.
             dropped_rate=self.drop_rate,
-            batch_size=self.batch_testing,
-            mod = self.mod
+            batch_size=self.batch_testing
             )
 
             test_set_sr3 = dataset(
@@ -103,8 +90,7 @@ class classification_dataset(object):
             mfcc=self.mfcc,
             sr=4,  # Test set can be sample differently.
             dropped_rate=self.drop_rate,
-            batch_size=self.batch_testing,
-            mod = self.mod
+            batch_size=self.batch_testing
             )
         else: test_set_sr2, test_set_sr3 = None, None
         # Create a DataLoader to efficiently load the dataset in batches

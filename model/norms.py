@@ -1,12 +1,10 @@
-# Normalizations for complex numbers of Fourier space
 import torch
 import torch.nn as nn
-# For real-valued vectors
 
 class NormalizationLayer(nn.Module):
     "Normalization wapper"
     def __init__(self, norm, hidden, affine = True, 
-                 eps=1e-6, var = True, mean = True):
+                 var = True, mean = True):
         super(NormalizationLayer, self).__init__()
         # Normalization (input shape  B, L, C)
         if norm == "LayerNorm":
@@ -33,7 +31,7 @@ class LayerNorm(nn.Module):
 
     def forward(self, x):
         dim_ = x.dim()
-        mean = x.mean(-1, keepdim=True) # over the vectors
+        mean = x.mean(-1, keepdim=True)
         std = torch.sqrt(torch.var(x, dim=-1, keepdim=True)+ 1e-5)
         x = (x - mean) / (std + self.eps)
         if self.affine:

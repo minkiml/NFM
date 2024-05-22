@@ -90,10 +90,7 @@ class Solver(object):
                                               mode='test',
                                               dataset=self.dataset,
                                               logger=self.logger)
-        # self.thre_loader = get_loader_segment(self.data_path, batch_size=self.batch_size, win_size=self.win_size,
-        #                                       mode='thre',
-        #                                       dataset=self.dataset,
-        #                                       logger=self.logger)
+        
         self.loss_TD = Value_averager()
         self.loss_FD = Value_averager()
         self.loss_total = Value_averager()

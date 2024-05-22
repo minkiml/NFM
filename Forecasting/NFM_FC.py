@@ -34,7 +34,7 @@ class NFM_FC(nn.Module):
         
         # B, L, C = x.shape 
         # NFM backbone
-        z, freq , f_token, zz, xx= self.NFM_backbone(x)
+        z= self.NFM_backbone(x)
 
         # Forecasting header
         y = self.predictor(z)
@@ -46,7 +46,7 @@ class NFM_FC(nn.Module):
 
         # Final outputs
         x_horizon = y[:,-self.hyper_vars.L_out:,:]
-        return y, y_freq, x_horizon, freq , f_token, zz, xx  # full time-domain out (N+L), full span freq, forecasting result
+        return y, y_freq, x_horizon
 
     def criterion(self, 
                 pred_TD, target_TD, 

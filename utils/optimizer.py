@@ -1,10 +1,8 @@
 import torch
-import torch.nn as nn
 import logging
 import os
 import math
 
-from Forecasting.NFM_FC import NFM_FC
 def opt_constructor(scheduler,
         nfm,
         lr,

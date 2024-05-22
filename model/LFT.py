@@ -8,10 +8,9 @@ from model.norms import NormalizationLayer
 from model.utilities import F_combine
 
 class LFT_block(nn.Module):
-    # Learnable Fourier basis
+    "Learnable frequency token embeddings"
     def __init__(self, 
-                 vars:HyperVariables,
-                 dropout = 0.2):
+                 vars:HyperVariables):
         super(LFT_block, self).__init__() 
         self.hyper_vars_LFT = vars
         self.lft = vars.lft
@@ -29,6 +28,7 @@ class LFT_block(nn.Module):
             self.norm_out = NormalizationLayer(norm = "InstanceNorm", 
                                 hidden = self.hyper_vars_LFT.hidden_dim, 
                                 affine = False)
+            
             if self.hyper_vars_LFT.LFT_nomalization: 
                 self.norm_out2 = NormalizationLayer(norm = "InstanceNorm", 
                                 hidden = self.hyper_vars_LFT.hidden_dim, 
@@ -44,25 +44,25 @@ class LFT_block(nn.Module):
             # self.naive = nn.Parameter(torch.randn(1,self.hyper_vars_LFT.freq_span, self.hyper_vars_LFT.LFT_siren_hidden, dtype=torch.complex64) * 0.1)
 
         self.lft_scale_bias = lft_scale_bias(self.hyper_vars_LFT,
-                                       scale=False,
-                                       bias=False,
+                                       scale=True, ## 
+                                       bias=True, ## 
                                        std_ =1.0)
         
     def forward(self, x, temporal_loc = None):
         B, f_in, hidden = x.shape
         x_freq = self.hyper_vars_LFT.DFT_(self.norm_out2(x))
         # Mapping Input freq to the frequency base      
-        base_signal, f_tokens = self.generate_frequency_token(B=B, dev = x_freq.device, temporal_loc = temporal_loc)
+        f_tokens = self.generate_frequency_token(B=B, dev = x_freq.device, temporal_loc = temporal_loc)
         if self.lft:
             f_tokens = self.lft_scale_bias(f_tokens)        
 
         # x_base = self.hyper_vars_LFT.map_to_base(x_freq * self.hyper_vars_LFT.scale_factor * self.hyper_vars_LFT.scale_factor_IN_to_OUT, f_tokens)
         x_base = self.hyper_vars_LFT.map_to_base2(x_freq * self.hyper_vars_LFT.scale_factor * self.hyper_vars_LFT.scale_factor_IN_to_OUT, f_tokens)
-        x_base = self.hyper_vars_LFT.IDFT_(x_base, L = self.hyper_vars_LFT.L_span) #+ self.pos_emb(B)
+        x_base = self.hyper_vars_LFT.IDFT_(x_base, L = self.hyper_vars_LFT.L_span) 
         
         if not self.lft:
             x_base = x_base
-        return x_base, f_tokens
+        return x_base
 
     def generate_frequency_token(self, B, dev = None, temporal_loc = None):
         if self.lft:
@@ -76,7 +76,7 @@ class LFT_block(nn.Module):
 
         if self.hyper_vars_LFT.freq_span < self.hyper_vars_LFT.f_base:
             f_tokens = f_tokens[:,:self.hyper_vars_LFT.freq_span,:]
-        return base_signal, f_tokens
+        return f_tokens
 
 class lft_scale_bias(nn.Module):
     ''' 

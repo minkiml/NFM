@@ -1,6 +1,6 @@
 # sh ./Forecasting/scripts/Weather.sh
 export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
-runs=1
+runs=4
 data_path_name='./datasets/forecasting_data'
 data=weather
 pred_lens=(96 192 336 720)
@@ -24,8 +24,9 @@ do
       --vars_in_test $look_back $look_back $pred_len $look_back \
       --filter_type INFF \
       --input_c 21 \
-      --hidden_dim 32 \
+      --hidden_dim 36 \
       --hidden_factor 3 \
+      --ff_projection_ex 3 \
       --inff_siren_hidden 32\
       --inff_siren_omega 30\
       --layer_num 1 \
@@ -37,9 +38,13 @@ do
       --channel_dependence 0 \
       --n_epochs 60 \
       --scheduler 0 \
+      --warm_up 0.1 \
+      --final_lr 0.00015 \
+      --ref_lr 0.00025 \
+      --start_lr 0.00025 \
       --description "" \
-      --gpu_dev 0 \
-      --batch 2000 --batch_testing 200 --lr_ 0.0002
+      --gpu_dev 6 \
+      --batch 1680 --batch_testing 200 --lr_ 0.00025
 done
 
 # sr mode
@@ -64,8 +69,9 @@ do
       --vars_in_test $look_back $half_look_back $pred_len $half_look_back \
       --filter_type INFF \
       --input_c 21 \
-      --hidden_dim 32 \
+      --hidden_dim 36 \
       --hidden_factor 3 \
+      --ff_projection_ex 3 \
       --inff_siren_hidden 32\
       --inff_siren_omega 30\
       --layer_num 1 \
@@ -78,7 +84,7 @@ do
       --n_epochs 40 \
       --scheduler 0 \
       --description "" \
-      --gpu_dev 0 \
-      --batch 2000 --batch_testing 64 --lr_ 0.0002
+      --gpu_dev 7 \
+      --batch 1680 --batch_testing 64 --lr_ 0.0002
 done
 done

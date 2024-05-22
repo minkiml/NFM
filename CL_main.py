@@ -4,7 +4,6 @@ import logging
 import numpy as np
 import torch
 from torch.backends import cudnn
-from Classification.data_factory.UCR_dataset.ucr_macro import *
 from Classification.CL_solver import Solver
 
 def mkdir(directory):
@@ -20,21 +19,8 @@ def main(config):
     if (not os.path.exists(config.model_save_path)):
         mkdir(config.model_save_path)
     solver = Solver(vars(config))
-    
-    if config.mode == 'train':
-        solver.train()
-        solver.test()
-    # elif config.mode == 'test':
-    elif config.mode == 'test':
-        solver.test()
-    elif config.mode == 'pretrain':
-        solver.pretrain()
-    
-    elif config.mode == 'finetune':
-        solver.train(finetuning = True)
-        solver.test()
-    elif config.mode == 'ct':
-        solver.complexity_test()
+    solver.train()
+    solver.test()
     return solver
 
 
@@ -45,9 +31,6 @@ if __name__ == '__main__':
     parser.add_argument("--data_path", type=str, default='./data', help="path to grab data")
     parser.add_argument("--description", type=str, default='', help="optional")
     parser.add_argument("--dataset", type=str, default="SpeechCommands")
-    parser.add_argument('--mode', type=str, default='train', choices=['train', 'test', 'pretrain', 'finetune', "ct"]) #del
-    parser.add_argument("--UCR", type=int, default=0, help = "UCR experiment") # del
-    parser.add_argument("--mod", type=str, default='Adiac') # del
     # Save path
     parser.add_argument('--model_save_path', type=str, default='checkpoints')
     parser.add_argument('--plots_save_path', type=str, default='plots')
@@ -74,19 +57,22 @@ if __name__ == '__main__':
     parser.add_argument("--final_wd", type=float, default=0., help = "fianl weight decay")
 
     # NFM params
-    parser.add_argument('--input_c', type=int, default=7) 
+    parser.add_argument('--input_c', type=int, default=7, help = "Input channel dim") 
     parser.add_argument("--hidden_dim", type=int, default=32)
     parser.add_argument("--inff_siren_hidden", type=int, default=32)
-    parser.add_argument("--inff_siren_omega", type=int, default=30)
+    parser.add_argument("--inff_siren_omega", type=float, default=30.)
     parser.add_argument("--hidden_factor", type=int, default=3)
-    parser.add_argument("--layer_num", type=int, default=1)
+    parser.add_argument("--layer_num", type=int, default=2)
     parser.add_argument("--dropout", type=float, default=0.3)
     parser.add_argument("--filter_type", type=str, default="INFF", choices=["INFF", "FNO", "AFNO", "GFN", "AFF"])
-    # LFT (based on siren) params
-    parser.add_argument("--lft", type=int, default=1)
-    parser.add_argument("--siren_hidden", type=int, default=48)
+    parser.add_argument("--init_xaviar", type=int, default=1, help = "Initialization method for linear projection")
+    
+    # LFT params
+    parser.add_argument("--lft", type=int, default=1, help = "whether to use LFT")
+    parser.add_argument("--siren_hidden", type=int, default=32)
     parser.add_argument("--siren_in_dim", type=int, default=4)
     parser.add_argument("--siren_omega", type=float, default=30.)
+    parser.add_argument("--ff_std", type=int, default=128)
     parser.add_argument("--lft_norm", type=int, default=1, help = "Whether to apply normalization to input spectrum in LFT")
     parser.add_argument("--tau", type=str, default="independent", choices= ["independent", "shared"])
 
@@ -99,10 +85,6 @@ if __name__ == '__main__':
     parser.add_argument("--CE_smoothing_scheduler", type=int, default=0)
     parser.add_argument("--channel_dependence", type=int, default=1, help = "1: True, 0: False (channel independent)")
     parser.add_argument("--freq_span", type=int, default=-1, help = "-1 for operating on full frequency span")
-
-    parser.add_argument("--temp_var1", type=float, default=0.2)
-    parser.add_argument("--temp_var2", type=int, default=128)
-    parser.add_argument("--temp_var3", type=str, default="TD")
 
     # IN-Out for training
     parser.add_argument(
@@ -118,79 +100,30 @@ if __name__ == '__main__':
         type=int,
         default=[360, 360, 180, 360],
         help="A set of variables [Fs, F_in, L_out (horizon), L_in (lookback)] \
-            for formatting testing data. If same as 'vars_in_train' then, conventional scenario")
+            for formatting testing data. If same as 'vars_in_train' then, the task is conventional scenario")
 
     config = parser.parse_args()
     ##########################################################
     ##########################################################
-    if config.UCR: #del TODO 
-        list_of_datasets = LIST_OF_S #LIST_OF_INF
-        config.log_path = config.log_path + "UCR" + "_" + f"{config.id_}"
-        for i, dataset in enumerate(list_of_datasets):
-            if i > 3:
-                break;
-            # reconfig according to each dataset
-            config.mod = dataset["dataset"]
-            fs = dataset["length"]
-            fs = fs if fs > 200 else int(fs * 3 )
-            lookback = dataset["length"]
-            pred_lens = 0
-            config.vars_in_train = [fs, lookback, pred_lens, lookback]
-            config.vars_in_test = [fs, lookback, pred_lens, lookback]
-            config.num_class = dataset["class_num"]
-            # reconfig training batch size 
-            if dataset["train_num"] < 120: 
-                config.batch = 2
-            elif int(dataset["train_num"] / 16) < 20: 
-                config.batch =  6
-            elif dataset["train_num"] > 3000:
-                config.batch =  48
-            else: config.batch =  8
-            # global logger
-            log_path = os.path.join(config.log_path, config.mod)
-            if config.mode == "pretrain" or config.mode == "finetune":
-                log_path = log_path + "_" + "pret"
-            if not os.path.exists(log_path):
-                os.makedirs(log_path)
-            os.environ["log_loc"] = f"{log_path}"
-            root_dir = os.getcwd() 
-            logging.basicConfig(filename=os.path.join(root_dir, f'{log_path}/log_all.txt'), level=logging.INFO,
-                                format = '%(asctime)s - %(name)s - %(message)s')
-            logger = logging.getLogger('In main')
-            logger.info(f"Experiment: Time-series classification UCR {i}/{len(list_of_datasets)}")
-            
-            config.model_save_path = os.path.join(log_path,"checkpoints") 
-            config.plots_save_path = os.path.join(log_path,"plots") 
-            config.his_save_path = os.path.join(log_path,"hist") 
-            args = vars(config)
-            print('------------ Options -------------')
-            for k, v in sorted(args.items()):
-                logger.info('%s: %s' % (str(k), str(v)))
-            print('-------------- End ----------------')
-            main(config)
+    # global logger
+    la = "_raw" if not config.mfcc else "_mfcc"
+    log_path = config.log_path + config.dataset + la + "_" + f"{config.id_}" + "_" + f"{config.description}"
+    if not os.path.exists(log_path):
+        os.makedirs(log_path)
+    os.environ["log_loc"] = f"{log_path}"
+    root_dir = os.getcwd() 
+    logging.basicConfig(filename=os.path.join(root_dir, f'{log_path}/log_all.txt'), level=logging.INFO,
+                        format = '%(asctime)s - %(name)s - %(message)s')
+    logger = logging.getLogger('In main')
+    logger.info(f"Experiment: Time-series classification")
+    
+    config.model_save_path = os.path.join(log_path,"checkpoints") 
+    config.plots_save_path = os.path.join(log_path,"plots") 
+    config.his_save_path = os.path.join(log_path,"hist") 
+    args = vars(config)
 
-    else:
-        # global logger
-        la = "_raw" if not config.mfcc else "_mfcc"
-        log_path = config.log_path + config.dataset + la + "_" + f"{config.id_}" + "_" + f"{config.description}"
-        if config.mode == "pretrain" or config.mode == "finetune":
-            log_path = log_path + "_" + "pret"
-        if not os.path.exists(log_path):
-            os.makedirs(log_path)
-        os.environ["log_loc"] = f"{log_path}"
-        root_dir = os.getcwd() 
-        logging.basicConfig(filename=os.path.join(root_dir, f'{log_path}/log_all.txt'), level=logging.INFO,
-                            format = '%(asctime)s - %(name)s - %(message)s')
-        logger = logging.getLogger('In main')
-        logger.info(f"Experiment: Time-series classification")
-        
-        config.model_save_path = os.path.join(log_path,"checkpoints") 
-        config.plots_save_path = os.path.join(log_path,"plots") 
-        config.his_save_path = os.path.join(log_path,"hist") 
-        args = vars(config)
-
-        print('------------ Options -------------')
-        for k, v in sorted(args.items()):
-            logger.info('%s: %s' % (str(k), str(v)))
-        print('-------------- End ----------------')
-        main(config)
+    print('------------ Options -------------')
+    for k, v in sorted(args.items()):
+        logger.info('%s: %s' % (str(k), str(v)))
+    print('-------------- End ----------------')
+    main(config)

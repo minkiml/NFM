@@ -73,7 +73,7 @@ if __name__ == '__main__':
     parser.add_argument("--final_wd", type=float, default=0., help = "fianl weight decay")
 
     # NFM params
-    parser.add_argument("--std", type=float, default=0.04, help="std factor used for initialization")
+    parser.add_argument("--std", type=float, default=0.06, help="std factor used for initialization")
     parser.add_argument('--input_c', type=int, default=7) 
     parser.add_argument("--hidden_dim", type=int, default=64, help = "dimension of hidden feature d")
     parser.add_argument("--inff_siren_hidden", type=int, default=64)
@@ -89,6 +89,7 @@ if __name__ == '__main__':
     parser.add_argument("--siren_hidden", type=int, default=48)
     parser.add_argument("--siren_in_dim", type=int, default=4, help = "This is also parameter for INFF")
     parser.add_argument("--siren_omega", type=float, default=30.)
+    parser.add_argument("--ff_std", type=int, default=128)
     parser.add_argument("--lft_norm", type=int, default=0, help = "Whether to apply normalization to input spectrum in LFT")
     parser.add_argument("--tau", type=str, default="independent", choices= ["independent", "shared"])
 
@@ -99,8 +100,6 @@ if __name__ == '__main__':
     parser.add_argument("--channel_dependence", type=int, default=1, help = "channel_dependence -- 1: True, 0: False (channel independent)")
     parser.add_argument("--look_back", type=int, default=720)
     parser.add_argument("--horizon", type=int, default=96)
-
-    parser.add_argument("--temp_var2", type=int, default=128, help = "-1 for operating on full frequency span")
 
     # IN-Out for training
     parser.add_argument(

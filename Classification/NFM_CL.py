@@ -21,18 +21,17 @@ class NFM_CL(nn.Module):
                                 dropout = self.hyper_vars.dropout)
         # Header
         self.predictor = Classifier(vars = self.hyper_vars,
-                                        factor_reduce = 1,
                                         pooling_method = "AVG",
-                                        processing =self.hyper_vars.temp_v3 # "mean"
+                                        processing ="mean"
                                         )
         self.softmax = nn.Softmax(dim = 1)
 
-        self.temp = self.hyper_vars.temp_v
+        self.smoothing = 0.25
     def forward(self, x):
         x = self.hyper_vars.input_(x)
         B, L, C = x.shape 
         # NFM
-        z,  freq , f_token, zz, xx= self.NFM_backbone(x)
+        z = self.NFM_backbone(x)
         # Classification
         y = self.predictor(z) # B, num_class
         return y
@@ -46,7 +45,7 @@ class NFM_CL(nn.Module):
     def criterion_cl(self, logit, target):
         assert target.dim() == 1 and logit.dim() == 2
         self.smoothing_rate_step()
-        return F.cross_entropy(logit, target, label_smoothing=self.temp)
+        return F.cross_entropy(logit, target, label_smoothing=self.smoothing)
     
     def smoothing_rate_step(self):
         if self.hyper_vars.CE_smoothing_scheduler:
@@ -66,7 +65,8 @@ class NFM_CL(nn.Module):
             elif new_rate < 0.:
                 new_rate = 0.
                 self.hyper_vars.CE_smoothing_scheduler = False
-            self.temp = new_rate
+            self.smoothing = new_rate
+
     def smoothing_rate_reset(self, warmup_steps, start_rate, ref_rate, final_rate, T_max):
         self.start_rate = start_rate
         self.ref_rate = ref_rate
@@ -89,6 +89,8 @@ class NFM_CL(nn.Module):
         else:
             for name, param in self.named_parameters():
                 param.requires_grad = True
+
+
 def model_constructor(hypervar):
     log_loc = os.environ.get("log_loc")
     root_dir = os.getcwd() 

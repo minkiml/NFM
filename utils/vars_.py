@@ -34,27 +34,28 @@ class HyperVariables(object):
                  norm_trick = "mean_std",
                  CE_smoothing_scheduler = False,
 
-                 temp_v = 0.2,
-                 temp_v2 = 128,
-                 temp_v3 = "mean",
-                 ff_projection_ex = 3):
-        # Gloabl logger
-        log_loc = os.environ.get("log_loc")
-        root_dir = os.getcwd() 
-        logging.basicConfig(filename=os.path.join(root_dir, f'{log_loc}/log_all'), level=logging.INFO,
-                            format = '%(asctime)s - %(name)s - %(message)s')
-        self.logger = logging.getLogger('From hyper_vars')
+                 ff_std = 128,
+                 ff_projection_ex = 3,
+                 init_xaviar = False,
+                 
+                 print_inf = True):
+        if print_inf:
+            # Gloabl logger
+            log_loc = os.environ.get("log_loc")
+            root_dir = os.getcwd() 
+            logging.basicConfig(filename=os.path.join(root_dir, f'{log_loc}/log_all'), level=logging.INFO,
+                                format = '%(asctime)s - %(name)s - %(message)s')
+            self.logger = logging.getLogger('From hyper_vars')
         
-        self.temp_v = temp_v
-        self.temp_v2 = temp_v2
-        self.temp_v3 = temp_v3
+        self.ff_std = ff_std
         self.proj_factor = ff_projection_ex
+        self.init_xaviar = init_xaviar
 
         self.loss_type = loss_type 
         self.class_num = class_num
         self.CE_smoothing_scheduler = CE_smoothing_scheduler
         # Init params #
-        self.init_std = 0.06 
+        self.init_std = 0.06
         self.init_mean = 0.
         
         # INR-based LFT params (if LFT_type = "naive" the below params are not used)
@@ -120,7 +121,8 @@ class HyperVariables(object):
         # self.__set_freq_span__(self.fspan)
 
         self.check_var_conditions()
-        self.display_vars()
+        if print_inf:
+            self.display_vars()
 
         self.sets_in_testing2 = [self.Fs, int(self.F_in / 2), 0, int(self.F_in / 2)]
         self.sets_in_testing3 = [self.Fs, int(self.F_in / 4), 0, int(self.F_in / 4)]

@@ -1,14 +1,8 @@
 import torch
-import numpy
 import os
-import json
-import csv
 import numpy as np
-import torch.nn.functional as F
-from sklearn.manifold import TSNE
 import matplotlib.pyplot as plt
 import seaborn as sns; sns.set()
-import logging
 # Set plt params
 sns.set(style='ticks', font_scale=1.2)
 plt.rcParams['figure.figsize'] = 12,8
@@ -68,7 +62,8 @@ class Logger(object):
         for ii, class_label in enumerate(unique_classes):
             class_indices = np.where(y[:, 0] == class_label)[0]
             sample_index = class_indices[10]  # Choose the first sample for marking
-            axes.text(x[sample_index, 0], x[sample_index, 1], f'{ii}', color='black', fontsize=15, ha='center', va='center', fontweight='bold')
+            axes.text(x[sample_index, 0], x[sample_index, 1], f'{ii}', color='black', fontsize=15, 
+                      ha='center', va='center', fontweight='bold')
 
         cbar = plt.colorbar(scatter)
         cbar.set_label(r'$\mathbf{z_c}$', fontweight='bold', fontsize=20)
@@ -121,21 +116,7 @@ class Logger(object):
         plt.savefig(os.path.join(self.log_plot_path, "Forecasting_Error.png")) 
         plt.clf()   
         plt.close(fig)
-        
-    def log_time_domain_vis(self, ground_t, name_ = ""):
-        fig = plt.figure(figsize=(12, 8), 
-        dpi = 600) 
-        axes = fig.subplots()
-        axes.plot(ground_t[:,-1], color = "blue",
-            alpha = 0.8, label = 'Input X')
-        plt.xticks(fontweight='bold', fontsize = 20)   
-        plt.yticks(fontweight='bold', fontsize = 20)
-        legend = axes.legend(fontsize=20, loc='upper center', bbox_to_anchor=(0.5, 1.1))
 
-        plt.savefig(os.path.join(self.log_plot_path, name_ + f"Input X_{name_}" + ".png" ), bbox_inches='tight') 
-        plt.clf()   
-        plt.close(fig) 
-        # get more functions on demand
     def frequency_reponse(self, f = None, range = -1, name_ = ""):
         if f.dim() == 2:
             F, c = f.shape
@@ -184,133 +165,6 @@ class Logger(object):
         plt.savefig(os.path.join(self.log_plot_path, "CM_" + f"{name_}" + ".png")) 
         plt.clf()   
         plt.close(fig)
-    
-    # TODO: tidy up this 
-    def log_2d_vis(self, x, f = None, name_ = "", time = False):
-        if time == False:
-            if x.dim() == 2:
-                l, c = x.shape
-                # time domain
-                td_ = x.T.detach().cpu().numpy()
-                # mag
-                magnitude = torch.abs(f).cpu().detach().numpy()
-                # phase
-                phase = torch.angle(f).cpu().detach().numpy()
-                # freq (= mag)
-                imaginary =(f.imag).cpu().detach().numpy()
-                real_ =(f.real).cpu().detach().numpy()
-            else:
-                b, l, c = x.shape
-                td_ = x.mean(dim=0).T.detach().cpu().numpy()
-                magnitude = torch.abs(f).mean(dim=0).cpu().detach().numpy()
-                phase = torch.angle(f).mean(dim=0).cpu().detach().numpy()
-                imaginary =(f.imag).mean(dim=0).cpu().detach().numpy()
-                real_ =(f.real).mean(dim=0).cpu().detach().numpy()
-            fig = plt.figure(figsize=(12, 8), 
-                dpi = 600) 
-            axes = fig.subplots()
-            # Display the attention map
-            im = axes.imshow(td_, cmap='viridis', aspect='auto')
-            # Set axis labels and title
-            plt.xlabel("t")
-            plt.ylabel("feature")
-            # Add a colorbar using the ScalarMappable
-            cbar = plt.colorbar(im)
-            # cbar.set_label(r'$\mathbf{z_c}$', fontweight='bold', fontsize=25)
-            plt.savefig(os.path.join(self.log_plot_path, "LFT_" + f"{name_}" + ".png")) 
-            plt.clf()   
-            plt.close(fig)
-
-            # Magnitude
-            fig = plt.figure(figsize=(12, 8), 
-            dpi = 600) 
-            axes = fig.subplots()
-            im = axes.imshow(magnitude.T, aspect='auto', cmap='viridis')
-            # plt.title('Magnitude Visualization')
-            plt.xlabel('Frequency Component', fontweight='bold')
-            plt.ylabel('Hidden Dimension', fontweight='bold')
-            plt.xticks(fontweight='bold')   
-            plt.yticks(fontweight='bold')
-            cbar = plt.colorbar(im)
-            cbar.set_label('Magnitude', fontweight='bold')
-            # cbar.set_ticks(fontweight='bold')
-
-            plt.savefig(os.path.join(self.log_plot_path,"magnitude_" + f"{name_}" + ".png" )) 
-            plt.clf()   
-            plt.close(fig)
-
-            # Phase
-            fig = plt.figure(figsize=(12, 8), 
-            dpi = 600) 
-            axes = fig.subplots()
-            im = axes.imshow(phase.T, aspect='auto', cmap='twilight')
-            plt.title('Phase Visualization')
-            plt.xlabel('Frequency Component (F)')
-            plt.ylabel('Feature Dimension (d)')
-            cbar = plt.colorbar(im)
-            plt.savefig(os.path.join(self.log_plot_path,"Phase_" + f"{name_}" + ".png" )) 
-            plt.clf()   
-            plt.close(fig)
-
-            # Imaginary only
-            fig = plt.figure(figsize=(12, 8), 
-            dpi = 600) 
-            axes = fig.subplots()
-            im = axes.imshow(imaginary.T, aspect='auto', cmap='twilight')
-            plt.title('Imaginary Values')
-            plt.xlabel('Frequency Component (F)')
-            plt.ylabel('Feature Dimension (d)')
-            cbar = plt.colorbar(im)
-            plt.savefig(os.path.join(self.log_plot_path,"Imaginary_" + f"{name_}" + ".png" )) 
-            plt.clf()   
-            plt.close(fig)
-
-            # real only
-            fig = plt.figure(figsize=(12, 8), 
-            dpi = 600) 
-            axes = fig.subplots()
-            im = axes.imshow(real_.T, aspect='auto', cmap='twilight')
-            plt.title('Real Values')
-            plt.xlabel('Frequency Component (F)')
-            plt.ylabel('Feature Dimension (d)')
-            cbar = plt.colorbar(im)
-            plt.savefig(os.path.join(self.log_plot_path,"Real_" + f"{name_}" + ".png" )) 
-            plt.clf()   
-            plt.close(fig)
-
-            # Frequency
-            ff_ = magnitude.mean(axis = 1)
-            ff_[0] *= 0.
-            freq_bins = np.arange(magnitude.shape[0])
-            fig = plt.figure(figsize=(12, 8), 
-            dpi = 600) 
-            axes = fig.subplots()
-            axes.plot(freq_bins, ff_ if c > 1 else magnitude[:,0], color='blue')
-            # plt.title('Frequency Domain Plot')
-            plt.xlabel('Frequency Component', fontweight='bold')
-            plt.ylabel('Magnitude', fontweight='bold')
-            plt.xticks(fontweight='bold')   
-            plt.yticks(fontweight='bold')
-            plt.grid()
-            plt.savefig(os.path.join(self.log_plot_path,"Mean_Frequency_" + f"{name_}" + ".png" )) 
-            plt.clf()   
-            plt.close(fig)
-        else:
-            td_ = x.mean(dim=0).T.detach().cpu().numpy()
-            fig = plt.figure(figsize=(12, 8), 
-                dpi = 600) 
-            axes = fig.subplots()
-            # Display the attention map
-            im = axes.imshow(td_, cmap='viridis', aspect='auto')
-            # Set axis labels and title
-            plt.xlabel("t")
-            plt.ylabel("feature")
-            # Add a colorbar using the ScalarMappable
-            cbar = plt.colorbar(im)
-            # cbar.set_label(r'$\mathbf{z_c}$', fontweight='bold', fontsize=25)
-            plt.savefig(os.path.join(self.log_plot_path, "LFT_" + f"{name_}" + ".png")) 
-            plt.clf()   
-            plt.close(fig)
 
 class Value_averager(object):
     def __init__(self):

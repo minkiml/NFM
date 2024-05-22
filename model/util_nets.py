@@ -1,9 +1,7 @@
 import math
 import torch
 import torch.nn as nn
-import torch.nn.init as init
 import numpy as np
-from model.norms import NormalizationLayer
 from model.utilities import (trunc_normal_, F_combine, clones, Permute)
 from utils.vars_ import HyperVariables
 
@@ -14,34 +12,33 @@ def Linear1d(
     bias: bool = True,
 ) -> torch.nn.Module:
     """
-    A Linear Layer in terms of a point-wise convolution.
+    A point-wise convolution based linear layer.
     """
     return nn.Conv1d(in_channels, out_channels, kernel_size=1, stride=stride, bias=bias)
 
 
-class CV_projection(nn.Module):
+class CV_MLP(nn.Module):
     '''
-    Complex-valued vector projection
+    Complex-valued MLP
     '''
-    def __init__(self, dim_in, dim_out, shared = False, bias = True, factor = 1, spec_out = None,
-                 non_linearity = False, hidden=None, dropout = 0.2, std_ = 0.02,
-                 nl_type = "GeLU"): 
-        super(CV_projection, self).__init__()     
+    def __init__(self, dim_in, dim_out, shared = False, bias = True, factor = 1,
+                 non_linearity = True,  nl_type = "GeLU", n_slope = 0.01): 
+        super(CV_MLP, self).__init__()     
         self.f1 = dim_in
         self.f2 = dim_out * factor
         self.shared = shared
         self.bias = bias
         self.non_linearity = non_linearity
-        self.std_ = std_
         factor = 1 if not self.non_linearity else factor
         Linear = nn.Linear
+        # TODO: this needs tidying up
         if self.shared:
-            self.shared_linear = Linear(dim_in, dim_out * factor if hidden is None else hidden, bias = False)                
+            self.shared_linear = Linear(dim_in, dim_out * factor, bias = False)                
         else:
-            self.real_linear = Linear(dim_in, dim_out * factor if hidden is None else hidden, bias = False)
-            self.imag_linear = Linear(dim_in, dim_out * factor if hidden is None else hidden, bias = False)
+            self.real_linear = Linear(dim_in, dim_out * factor, bias = False)
+            self.imag_linear = Linear(dim_in, dim_out * factor, bias = False)
         if bias:
-            self.projection_bias = nn.Parameter(torch.zeros(2, 1, 1, dim_out* factor if hidden is None else hidden))
+            self.projection_bias = nn.Parameter(torch.zeros(2, 1, 1, dim_out* factor))
         if non_linearity:
             if nl_type == "Identity":
                 self.nl = nn.Identity() 
@@ -50,16 +47,15 @@ class CV_projection(nn.Module):
             elif nl_type == "GeLU":
                 self.nl = nn.GELU()
             elif nl_type == "LeakyReLU":
-                self.nl = nn.LeakyReLU(0.2)
+                self.nl = nn.LeakyReLU(n_slope, inplace = True)
             if self.shared:
-                self.shared_linear2 = Linear(dim_out * factor if hidden is None else hidden, spec_out if spec_out is not None else dim_out, bias = False)   
+                self.shared_linear2 = Linear(dim_out * factor, dim_out, bias = False)   
             else:
-                self.real_linear2 = Linear(dim_out * factor if hidden is None else hidden, spec_out if spec_out is not None else dim_out, bias = False)
-                self.imag_linear2 = Linear(dim_out * factor if hidden is None else hidden, spec_out if spec_out is not None else dim_out, bias = False)
+                self.real_linear2 = Linear(dim_out * factor, dim_out, bias = False)
+                self.imag_linear2 = Linear(dim_out * factor, dim_out, bias = False)
             if bias:
-                self.projection_bias2 = nn.Parameter(torch.zeros(2, 1, 1, spec_out if spec_out is not None else dim_out))
+                self.projection_bias2 = nn.Parameter(torch.zeros(2, 1, 1, dim_out))
 
-        self.weight_initalization()
     def forward(self, x):
         dim_ = x.dim()
         if self.shared:
@@ -91,25 +87,10 @@ class CV_projection(nn.Module):
                 imag_part2 = imag_part2 + self.projection_bias2[1] if dim_ == 3 else imag_part2 + self.projection_bias2[1].squeeze(0)
             return F_combine(real_part2, imag_part2)
         else: return F_combine(real_part, imag_part)
-    def nn_initialization(self, m):
-        if isinstance(m, nn.Linear):
-            if m.weight is not None:
-                if self.std_ != 1.:    
-                    pass
-            if m.bias is not None:
-                print("conv_bias")
-                nn.init.zeros_(m.bias)   
-    def weight_initalization(self):
-        for var, m in self.named_children():
-            if var == "shared_linear" or var == "real_linear" or var == "imag_linear": 
-                self.factor_norm = self.f1
-            elif var == "shared_linear2" or var == "real_linear2" or var == "imag_linear2":
-                self.factor_norm = self.f2         
-            m.apply(self.nn_initialization)
 
 class PositionwiseFeedForward(nn.Module):
     "FFN"
-    def __init__(self, d_model, d_ff, dropout=0.1, activation = "GeLU",
+    def __init__(self, d_model, d_ff, dropout=0.1, activation = "GeLU", n_slope = 0.2,
                  type_ = "linear", layer_id = 1, out_dim = None, std = None, bias = False,
                  init_ = 1):
         super(PositionwiseFeedForward, self).__init__()
@@ -122,9 +103,9 @@ class PositionwiseFeedForward(nn.Module):
         self.w_2 = Linear(d_ff, out_dim if out_dim is not None else d_model, bias = bias) ## 
        
         self.dropout = nn.Dropout(dropout)
-        if activation == "ReLU":
-            self.activation = nn.LeakyReLU(0.2, inplace = True)
-        elif activation == "ReLU2":
+        if activation == "LeakyReLU":
+            self.activation = nn.LeakyReLU(n_slope, inplace = True)
+        elif activation == "ReLU":
             self.activation = nn.ReLU()
         elif activation == "GeLU":
             self.activation = nn.GELU()
@@ -142,15 +123,9 @@ class PositionwiseFeedForward(nn.Module):
             x = x.permute(0,2,1)
         return x
     def nn_initialization(self, m):
-        if isinstance(m, (nn.Linear)):
+        if isinstance(m, (nn.Linear, nn.Conv1d)):
             if m.weight is not None:
                 pass
-            if m.bias is not None:
-                nn.init.zeros_(m.bias)  
-        if isinstance(m, (nn.Conv1d)):
-            if m.weight is not None:
-                init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='leaky_relu')
-                print("FFT keiming init")
             if m.bias is not None:
                 nn.init.zeros_(m.bias)  
     def weight_initalization(self,layer_id = 1, init_ = 1):        
@@ -160,51 +135,14 @@ class PositionwiseFeedForward(nn.Module):
                     self.div = self.d_model
                     trunc_normal_(m.weight, std=0.02 if self.std is None else self.std)
                     m.apply(self.nn_initialization)
-                    print(F"FFN std: {self.std}")
                 elif var == "w_2":
                     self.div = self.d_ff
                     trunc_normal_(m.weight, std=0.02 if self.std is None else self.std)
                     m.weight.data.div_(math.sqrt(2.0 * layer_id)) 
                     m.apply(self.nn_initialization)
-                    print(F"FFN std: {self.std}")
         elif init_ == 2:
             for var, m in self.named_children():
                 m.apply(self.nn_initialization)
-
-class GLU_projection(nn.Module):
-    def __init__(self, dim_in, out_dim, act = "Linear", projection_omega = 1.,
-                 type_ = "linear"):
-        super(GLU_projection, self).__init__()
-        self.type_ = type_
-        self.out_dim = out_dim
-        Linear = nn.Linear if type_ == "linear" else Linear1d
-        hidden_dim = out_dim * 2
-        assert (hidden_dim % 2) == 0
-        self.inter_dim = int(hidden_dim / 2) 
-        self.projection_in = Linear(dim_in, hidden_dim, bias = True)
-        self.projection_in_out = Linear(self.inter_dim, out_dim, bias = False)
-        self.act = {'Linear': nn.Identity(),
-                'periodic': Sine(),
-                }[act]
-        self.mul_omega = mul_omega(feature_dim = self.out_dim, 
-                                omega = projection_omega)
-    def forward(self, x):
-        if self.type_ != "linear":
-            x = x.permute(0,2,1)
-        x = self.projection_in(x)
-        if self.type_ != "linear":
-            x = self.projection_in_out(self.periodic_act(x[:,:self.inter_dim,:] * (x[:,self.inter_dim:,:]).sigmoid()))
-        else:
-            x = self.projection_in_out(self.periodic_act(x[:,:,:self.inter_dim] * (x[:,:,self.inter_dim:]).sigmoid()))
-        if self.type_ != "linear":
-            x = x.permute(0,2,1)
-        return x
-    def periodic_act(self, x):
-        if isinstance (self.act, (Sine)):
-            if self.type_ != "linear":
-                return self.act(self.mul_omega(x[:,:self.inter_dim,:]))
-            else: return self.act(self.mul_omega(x[:,:,:self.inter_dim]))
-        else: return x            
 
 class Periodic_activation(nn.Module):
     def __init__(self, nl = "sin"):
@@ -237,13 +175,14 @@ class mul_omega(nn.Module):
 
     def forward(self, x):
         return x * self.omega
-        
+
+'''
+SIREN ("Implicit Neural Representations with Periodic Activation Functions"
+https://github.com/vsitzmann/siren/tree/master) 
++
+Fourier Features ("Fourier Features Let Networks Learn High Frequency Functions in Low Dimensional Domains")
+'''
 class Siren_block(nn.Module):
-    '''
-    Learnable frequency token based on SIREN ("Implicit Neural Representations with Periodic Activation Functions"
-                                                  https://github.com/vsitzmann/siren/tree/master)
-    A purpose of learnable frequency token is to model rich prior about input sequences and add it to constructed fourier spectrum   
-    '''
     def __init__(self, 
                     vars: HyperVariables,
                     hidden_dim,
@@ -264,7 +203,7 @@ class Siren_block(nn.Module):
         self.hidden_dim = hidden_dim
         if self.hyper_var_siren.tau_in_inrs == "independent":
             self.FF_mapping = fourier_mapping(ff_dim = siren_dim_in,  
-                                                ff_sigma=self.hyper_var_siren.temp_v2, # !!
+                                                ff_sigma=self.hyper_var_siren.ff_std, # !!
                                                 learnable_ff = True, 
                                                 ff_type = "gaussian", # deterministic_exp  gaussian
                                                 L = self.hyper_var_siren.L_base)
@@ -278,8 +217,8 @@ class Siren_block(nn.Module):
         self.phi_mid = clones(nn.Sequential(Permute((0,2,1)) if type_ != "linear" else nn.Identity(),
                                             Linear(hidden_dim,hidden_dim, bias = False),
                                             Permute((0,2,1)) if type_ != "linear" else nn.Identity(),
-                                 mul_omega(hidden_dim, omega, False),
-                                 Periodic_activation(nl=nl)), midlayer_num)
+                                            mul_omega(hidden_dim, omega, False),
+                                            Periodic_activation(nl=nl)), midlayer_num)
 
         self.phi_last = nn.Sequential(Permute((0,2,1)) if type_ != "linear" else nn.Identity(),
                                       Linear(hidden_dim, out_dim, bias = False),
@@ -327,9 +266,7 @@ class Siren_block(nn.Module):
                 m.bias.data.zero_()                    
     def siren_initialization(self):
         for var, m in self.named_children():
-            # For all initialization here, we assume n = 1 (i.e., INR function of time only)
             if var == "phi_init": 
-                # m.apply(self.init_firstLayer)
                 m.apply(self.init_midLayers)
             elif var == "phi_mid":
                 self.dim_in = self.hidden_dim

@@ -5,7 +5,10 @@ from utils.vars_ import HyperVariables
 from model.norms import NormalizationLayer
 
 class mixer_block(nn.Module):
-    # Neural Fourier filter layer
+    '''
+    MAIN mixing block 
+    Conventional FFN (channel mixing) + NFF (token mixing)
+    '''
     def __init__(self, 
                  vars: HyperVariables,
                  dropout,
@@ -26,7 +29,7 @@ class mixer_block(nn.Module):
                                  f_modes = self.hyper_vars_NFF.freq_span)
         elif self.hyper_vars_NFF.filter_type  == "AFNO":
             self.NFF_block = AFNO(hidden_dim,
-                            hidden_hidden=hidden_dim * 1,
+                            hidden_hidden=hidden_dim,
                             head_num= 2,
                             bias_ = False)
         elif self.hyper_vars_NFF.filter_type  == "GFN":
@@ -35,37 +38,38 @@ class mixer_block(nn.Module):
             
         elif self.hyper_vars_NFF.filter_type  == "AFF":
             self.NFF_block = AFF(hidden_dim,
-                            hidden_out=hidden_dim * 1,
+                            hidden_out=hidden_dim,
                             head_num= 2,
                             bias_ = False)
             
-        self.TD_filter_NFF = PositionwiseFeedForward(hidden_dim, hidden_dim * hidden_factor, 
+        # FFN chnnel mixing
+        self.channel_mixer = PositionwiseFeedForward(hidden_dim, hidden_dim * hidden_factor, 
                                                  dropout=dropout, 
-                                                 activation = "ReLU2", # ReLU2
+                                                 activation = "LeakyReLU", 
                                                  type_ = "linear",
+                                                 n_slope = 0.04,
                                                  layer_id= layer_id,
                                                  std= self.hyper_vars_NFF.init_std,
-                                                 bias = False,
                                                  init_ = 1)
-
         self.norm1 = NormalizationLayer(norm = "LayerNorm", 
                                         hidden = self.hyper_vars_NFF.hidden_dim, 
                                         affine = True)
         self.norm2 = NormalizationLayer(norm = "LayerNorm", 
                                 hidden = self.hyper_vars_NFF.hidden_dim, 
                                 affine = True)
+        
     def forward(self, x, z_0 = None, temporal_loc = None):
         B, L_base, _ = x.shape
         if self.hyper_vars_NFF.mixing_method == "pre_channelmixing":
             z = self.token_mixing(self.channel_mixing(x), z_0, temporal_loc)
         else:
             z = self.channel_mixing(self.token_mixing(x, z_0, temporal_loc))
-        return z, None
+        return z
     
     def channel_mixing(self, x):
         if self.hyper_vars_NFF.norm_method == "prenorm":
             x = self.norm1(x)
-        x = self.TD_filter_NFF(x)
+        x = self.channel_mixer(x)
         if self.hyper_vars_NFF.norm_method == "postnorm":
             x = self.norm1(x)
         return x
@@ -75,10 +79,10 @@ class mixer_block(nn.Module):
         if self.hyper_vars_NFF.norm_method == "prenorm":
             x = self.norm2(x)
 
-        freqa = self.hyper_vars_NFF.DFT_(x)
-        freqa = freqa[:,:self.hyper_vars_NFF.freq_span,:]
-        freq2, freq, td_rep = self.NFF_block(freqa, conditional, tl)  
-        x = self.hyper_vars_NFF.IDFT_(freq2, L = self.hyper_vars_NFF.L_span) + residual
+        x = self.hyper_vars_NFF.DFT_(x)
+        x = x[:,:self.hyper_vars_NFF.freq_span,:]
+        x = self.NFF_block(x, conditional, tl)  
+        x = self.hyper_vars_NFF.IDFT_(x, L = self.hyper_vars_NFF.L_span) + residual
 
         if self.hyper_vars_NFF.norm_method == "postnorm":
             x = self.norm2(x)

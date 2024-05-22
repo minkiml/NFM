@@ -39,7 +39,7 @@ class NFM_AD(nn.Module):
         x = x / x_std
         
         # NFM
-        z, _ , _, _, _= self.NFM_backbone(x) # (B, L_base, hidden) 
+        z = self.NFM_backbone(x) # (B, L_base, hidden) 
         
         # Reconstruction
         B, L, c = z.shape
@@ -58,7 +58,7 @@ class NFM_AD(nn.Module):
                       mode = "training"):
         if reduction == 'none':
             pass
-        if loss_mode == "TFD" or loss_mode == "TD" or mode == "testing":
+        if loss_mode == "TFDR" or loss_mode == "TD" or mode == "testing":
             # full pred vs full gt y
             if self.mask_ and mode == "training":
                 rec_x = rec_x * self.masking.unsqueeze(0).unsqueeze(-1).to(rec_x.device)
@@ -67,32 +67,17 @@ class NFM_AD(nn.Module):
             TD_loss = F.mse_loss(rec_x, gt_y, reduction = reduction)
         else: TD_loss = torch.tensor(0.)
         if mode == "training":
-            if loss_mode == "TFD" or loss_mode == "FD":
+            if loss_mode == "TFDR" or loss_mode == "FD":
                 B, f, C = x_freq.shape
                 freq_y = (self.hyper_vars.DFT_(y)[:,:f,:]).detach()
 
                 loss_real = (x_freq.real -  freq_y.real)**2
                 loss_imag = (x_freq.imag - freq_y.imag)**2
                 FD_loss =  (torch.sqrt(loss_real + loss_imag+ 1e-12))
-                FD_loss = FD_loss if reduction == 'none' else FD_loss.mean()  #+ magnitude_loss
+                FD_loss = FD_loss if reduction == 'none' else FD_loss.mean() 
             else: FD_loss = torch.tensor(0.)
         else: FD_loss = torch.tensor(0.)
         return TD_loss, FD_loss
-    def nn_initialization(self, m):
-        if isinstance(m, (nn.Linear)):
-            pass
-            if m.bias is not None:
-                m.weight.data.normal_(0, 0.02) 
-                pass
-            if m.bias is not None:
-                m.bias.data.zero_()   
-    def weights_initialization(self):
-        self.init_mean = 0.
-        self.init_std = self.hyper_vars_fore.init_std
-        for var, m in self.named_children():
-            if var == "forecaster_" or var == "projection_out":
-                m.apply(self.nn_initialization)
-    
 
 def model_constructor(hypervar,
                       dsr,

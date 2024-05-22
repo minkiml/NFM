@@ -1,7 +1,6 @@
-# sh ./Classification/scripts/speechcommand.sh 
+# sh ./Classification/scripts_exp/speechcommand.sh 
 export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
 runs=3
-
 pred_lens=0
 look_backs=161
 freq_spans=-1
@@ -9,12 +8,10 @@ fs=161
 data_path_name='./datasets/classification_data'
 data=SpeechCommands
 random_seed=99
-run_id=0
+run_id=19
 
 test_sr=1
-# dropouts=(0.05 0.1 0.15 0.2 0.25)
 dropouts=(0.15 0.2 0.25)
-
 for (( i=0; i<${runs}; i++ ));
 do
     dropout=${dropouts[$i]}
@@ -32,14 +29,13 @@ do
       --hidden_dim 32 \
       --hidden_factor 3 \
       --inff_siren_hidden 32\
-      --inff_siren_omega 30\
+      --inff_siren_omega 35\
       --layer_num 2 \
       --dropout $dropout \
       --siren_hidden 32 \
       --siren_in_dim 32 \
-      --siren_omega 30\
-      --loss_type TFDR \
-      --channel_dependence 1 \
+      --siren_omega 35\
+      --init_xaviar 1 \
       --n_epochs 300 \
       --scheduler 1 \
       --warm_up 0.1 \
@@ -47,11 +43,11 @@ do
       --ref_lr 0.0005 \
       --start_lr 0.0005 \
       --description "_$dropout" \
-      --gpu_dev 6 \
+      --gpu_dev 7 \
       --sr_train 1 \
       --sr_test $test_sr \
       --dropped_rate 0 \
       --mfcc 1 \
       --num_class 10\
-      --batch 80 --batch_testing 64 --lr_ 0.0007
+      --batch 240 --batch_testing 64 --lr_ 0.0007
 done

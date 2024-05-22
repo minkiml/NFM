@@ -1,6 +1,6 @@
-# sh ./Forecasting/scripts/Elec.sh
+# sh ./Forecasting/scripts_exp/Elec.sh
 export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
-runs=1
+runs=4
 
 pred_lens=(96 192 336 720)
 look_backs=(720 720 720 720)
@@ -26,15 +26,16 @@ do
       --vars_in_test $look_back $look_back $pred_len $look_back \
       --filter_type INFF \
       --input_c 321 \
-      --hidden_dim 32 \
+      --hidden_dim 36 \
       --hidden_factor 3 \
+      --ff_projection_ex 3 \
       --inff_siren_hidden 32\
-      --inff_siren_omega 35\
+      --inff_siren_omega 30\
       --layer_num 1 \
       --dropout 0.1 \
       --siren_hidden 32 \
       --siren_in_dim 32 \
-      --siren_omega 35\
+      --siren_omega 30\
       --loss_type TFDR \
       --channel_dependence 0 \
       --n_epochs 50 \
@@ -44,6 +45,7 @@ do
       --ref_lr 0.00035 \
       --start_lr 0.00035 \
       --description "_" \
-      --gpu_dev 3 \
-      --batch 1000 --batch_testing 16 --lr_ 0.0001
+      --gpu_dev 2 \
+      --patience 3 \
+      --batch 1648 --batch_testing 16 --lr_ 0.0001
 done

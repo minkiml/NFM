@@ -1,6 +1,8 @@
-# Test data subset for each benchmark forecasting dataset
-# Following the same protocol for testing subset is important to make a fair comparison as even a small difference in the testing subset, the performance can be looked largely underperforming or overperforming 
-# In particular, the below setup for subsets follow that of "Are Transformers Effective for Time Series Forecasting?" https://github.com/cure-lab/LTSF-Linear/blob/main/pics/Mul-results.png
+# Training/validation/testing data split protocol used for each benchmark forecasting dataset
+# Following the same protocol for testing subset is important to make a fair comparison as with even a small 
+# difference in the testing subset, the final performance can be considerably different.  
+# This split protocol has been widely accepted in many forecasting models (e.g., "Are Transformers Effective for Time Series Forecasting?"  
+# https://github.com/cure-lab/LTSF-Linear/blob/main/pics/Mul-results.png )
 LIST_OF_FORCASTING_BENCHMARK_LENGTH = [    
     {   
     "name": "ETTh",

@@ -5,7 +5,6 @@ import math, copy
 
 
 def clones(module, N):
-    "Produce N identical layers."
     return nn.ModuleList([copy.deepcopy(module) for _ in range(N)])    
 
 def F_combine(real, imag, dim_ = -1):
@@ -43,21 +42,6 @@ class View(nn.Module):
     def forward(self, x):
         return x.view(*self.view_to_)
 
-class NoiseInjection(nn.Module):
-    def __init__(self, scale = 0.01, 
-                 hidden_dim = 32,
-                 fixed = False):
-        super(NoiseInjection, self).__init__()
-        self.scale = scale
-        self.fixed = fixed
-        if fixed:
-            self.n = torch.randn((1, 1, hidden_dim), requires_grad=False) * self.scale
-    def forward(self, x):
-        if self.fixed:
-            return x + self.n.to(x.device)
-        else:
-            return x + (torch.randn((x.shape), requires_grad=False).to(x.device) * self.scale)
-
 def _no_grad_trunc_normal_(tensor, mean, std, a, b):
     # Cut & paste from PyTorch official master until it's in a few official releases - RW
     # Method based on https://people.sc.fsu.edu/~jburkardt/presentations/truncated_normal.pdf
@@ -92,7 +76,6 @@ def trunc_normal_(tensor, mean=0., std=1., a=-2., b=2.):
 
 def drop_path(x, keep_prob: float = 1.0, inplace: bool = False) :
     mask_shape = (x.shape[0],) + (1,) * (x.ndim - 1) 
-    # remember tuples have the * operator -> (1,) * 3 = (1,1,1)
     mask = x.new_empty(mask_shape).bernoulli_(keep_prob)
     mask.div_(keep_prob)
     if inplace:

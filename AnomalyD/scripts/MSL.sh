@@ -1,17 +1,16 @@
-# sh ./AnomalyD/scripts/MSL.sh 
+# sh ./AnomalyD/scripts_exp/all.sh 
 export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
 run=1
 runs=4
-data_path_name='./datasets/anoamlyD_data/MSL'
+data_path_name='./datasets/anomalyD_data'
 data=MSL
 
-pred_lens=0 # no m_t 
-# look_backs=161
-win_size=100 #16000
+pred_lens=0
+win_size=100
 freqspan=-1
-fs=$win_size #161 # 128
+fs=$win_size
 random_seed=99
-run_id=14
+run_id=0
 
 gpu_de=4
 dsr=2
@@ -30,6 +29,7 @@ for (( i=0; i<${run}; i++ ));
         --vars_in_train $fs $input_length $pred_lens $input_length \
         --vars_in_test $fs $input_length $pred_lens $input_length \
         --DSR $dsr \
+        --lft_norm 1 \
         --masking 0 \
         --input_c 55 \
         --output_c 55 \
@@ -38,19 +38,17 @@ for (( i=0; i<${run}; i++ ));
         --hidden_dim 8 \
         --hidden_factor 3 \
         --inff_siren_hidden 32 \
-        --inff_siren_omega 30 \
+        --inff_siren_omega 10 \
         --layer_num 1 \
-        --dropout 0.0 \
-        --std 0.06 \
+        --dropout 0.00 \
         --siren_hidden 32 \
-        --siren_in_dim 32\
-        --siren_omega 30 \
-        --loss_type TFD \
-        --revstat 0 \
+        --siren_in_dim 16\
+        --siren_omega 10 \
+        --loss_type TFDR \
         --num_epochs 150 \
         --gpu_dev $gpu_de \
         --batch_size 128 --lr 0.0001
-    done
+done
 
 for (( i=0; i<${runs}; i++ ));
     do
@@ -66,6 +64,7 @@ for (( i=0; i<${runs}; i++ ));
         --vars_in_train $fs $input_length $pred_lens $input_length \
         --vars_in_test $fs $input_length $pred_lens $input_length \
         --DSR $dsr \
+        --lft_norm 1 \
         --masking 0 \
         --input_c 55 \
         --output_c 55 \
@@ -74,16 +73,14 @@ for (( i=0; i<${runs}; i++ ));
         --hidden_dim 8 \
         --hidden_factor 3 \
         --inff_siren_hidden 32 \
-        --inff_siren_omega 30 \
+        --inff_siren_omega 10 \
         --layer_num 1 \
-        --dropout 0.0 \
-        --std 0.06 \
+        --dropout 0.00 \
         --siren_hidden 32 \
-        --siren_in_dim 32\
-        --siren_omega 30 \
-        --loss_type TFD \
-        --revstat 0 \
+        --siren_in_dim 16\
+        --siren_omega 10 \
+        --loss_type TFDR \
         --num_epochs 1 \
         --gpu_dev $gpu_de \
         --batch_size 128 --lr 0.0001
-    done
+done

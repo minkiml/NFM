@@ -4,8 +4,7 @@ import torch.nn as nn
 from model.utilities import trunc_normal_, F_combine
 from utils.vars_ import HyperVariables
 from model.norms import NormalizationLayer
-from model.util_nets import (Siren_block, CV_projection,
-                             PositionwiseFeedForward)
+from model.util_nets import (Siren_block, CV_MLP)
 from model.LFT import lft_scale_bias
 def complex_mul( x, weights):
     if weights.dim() ==2:
@@ -190,8 +189,7 @@ class AFF(nn.Module):
 
 class INFF(nn.Module):
     '''
-    The frequency filter is parameterized by SIREN 
-    Constructing an implicit neural representation of frequency filter
+    Implicit neural Fourier filter
     '''
     def __init__(self, vars: HyperVariables, 
                  dropout = 0.2):
@@ -210,41 +208,22 @@ class INFF(nn.Module):
 
         self.norm_out = NormalizationLayer(norm = "InstanceNorm", 
                                         hidden = vars.hidden_dim , 
-                                        affine = False,
-                                        var=True)
-        self.norm_out2 = NormalizationLayer(norm = "InstanceNorm",
-                                        hidden = vars.hidden_dim, 
-                                        affine = False,
-                                        var=True)
+                                        affine = False)
+        
         self.inff_scale_bias = lft_scale_bias(self.hypervar_INFF,
                                               scale = True,
                                               bias = True,
-                                              std_ = 0.5)
+                                              std_ = 1.0) ##
 
-        self.spec_filter = CV_projection(dim_in = vars.hidden_dim, dim_out = vars.hidden_dim,
-                                        factor= 1, non_linearity= True, hidden = None,
-                                        shared = True, bias = False, spec_out= None, dropout= dropout,
-                                        std_= self.hypervar_INFF.init_std, nl_type="ReLU")
+        self.cv_mlp = CV_MLP(dim_in = vars.hidden_dim, dim_out = vars.hidden_dim, bias = False,
+                            factor= 1, shared = True, nl_type="ReLU")
     
     def forward(self, x, conditional = None, temporal_loc = None):
         B, F_, d_ = x.shape
         f_x = self.phi_INFF(tc = temporal_loc, L=self.hypervar_INFF.L_span,dev = x.device)
-        
-        # f_x = (self.norm_out(f_x) + self.norm_out2(conditional).detach())
-        # f_x = (self.norm_out(f_x) + self.norm_out2(conditional.detach()))
-
-        # f_x = (self.norm_out(f_x) + conditional.detach()) # 1)
-
-        f_x = self.norm_out(f_x) # 1)
+        f_x = (self.norm_out(f_x) + conditional.detach()) # 1)
         f = self.hypervar_INFF.DFT_(f_x)
-
-        x_cond = self.hypervar_INFF.DFT_(self.norm_out2(conditional)).detach()
-
-        # f = torch.cat((f.squeeze(0).expand(B,-1,-1),x_cond), dim = -1) # 2)
-        f = f + x_cond # 3)
-
-
-        f = self.spec_filter(f)
+        f = self.cv_mlp(f)
      
         if self.hypervar_INFF.freq_span < self.hypervar_INFF.f_base:
             f = f[:,:self.hypervar_INFF.freq_span,:]
@@ -253,4 +232,4 @@ class INFF(nn.Module):
         f = self.inff_scale_bias(f)
 
         x *=f
-        return x, f, f_x
+        return x
