@@ -8,10 +8,10 @@ data=ETTm1
 random_seed=1024
 run_id=12
 batch_size=1792
-pred_lens=(96 720 336 720)
+pred_lens=(96 192 336 720)
 look_backs=(720 720 720 720) 
 freq_span=-1
-dropouts=(0.05 0.35 0.05 0.2)
+dropouts=(0.05 0.05 0.05 0.3)
 
 for (( i=0; i<${runs}; i++ ));
 do
