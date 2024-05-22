@@ -97,7 +97,7 @@ We provide fixed code samples and details that we used to replace their original
 
 Conventional setup (input and ouput resolution are the same)
 
-![Forecasting results](images/forecasting_results.png)
+![Forecasting results](images/forecasting_results.PNG)
 
 At different testing-time sampling rate
 
@@ -118,9 +118,14 @@ NFM, which is formulated into a context learning setup, shows effectiveness in a
 ## How to use NFM on your own dataset and task
 We provide a short and quick [demo](demo/simple_demo.ipynb) on how to set up NFM and apply it to one's own data and task.
 
-## Citation
+
+## Contact
+If you have any questions about our work or this repo, please contact us: mkim332@aucklanduni.ac.nz 
+
+
+<!-- ## Citation
 If you cite our work, 
->📋  Pick a licence and describe how to contribute to your code repository. 
+>📋  Pick a licence and describe how to contribute to your code repository.  -->
 <!-- 
 ## Contact
 If you have any queries, please email us (mkim332@aucklanduni.ac.nz). -->
