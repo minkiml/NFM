@@ -1,5 +1,3 @@
->📋  A template README.md for code accompanying a Machine Learning paper
-
 # NFM: Neural Fourier Space Modelling for Time Series
 
 This repository is the official implementation of "NFM: Neural Fourier Space Modelling for Time Series".
@@ -120,7 +118,7 @@ We provide a short and quick [demo](demo/simple_demo.ipynb) on how to set up NFM
 
 
 ## Contact
-If you have any questions about our work or this repo, please contact us: mkim332@aucklanduni.ac.nz 
+If you have any questions about our work or this repo, please contact us: mkim332@aucklanduni.ac.nz .
 
 
 <!-- ## Citation
