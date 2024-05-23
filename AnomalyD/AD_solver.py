@@ -223,15 +223,11 @@ class Solver(object):
             vali_loss1 = self.vali(self.vali_loader)
             self.logger.info(f"Epoch[{epoch+1}] & Steps: {train_steps} & Train Loss: {self.loss_total.avg} & Vali Loss: {vali_loss1}")
 
-            # if (epoch % 20) == 0:
-            #     early_stopping.save_checkpoint(vali_loss1,  self.model, path)
             early_stopping(vali_loss1,  self.model, path)
             if early_stopping.early_stop:
                 self.logger.info("Early stopping")
                 break
-            # if epoch <=25:
-            #     self.adjust_learning_rate(self.optimizer, epoch + 1, self.lr)
-        # torch.save(self.model.state_dict(), os.path.join(path, str(self.dataset) + '_checkpoint.pth'))
+ 
 
     def test(self):
         if os.path.exists(os.path.join(str(self.model_save_path), '_checkpoint.pth')):
@@ -249,11 +245,8 @@ class Solver(object):
         val_labels = []
         attens_energy2 = []
         for i, (input_data, labels) in enumerate(self.train_loader):
-            # input = input_data.float().to(self.device)
-            # output, series, prior, _ = self.model(input)
-            
+  
             input = input_data.float().to(self.device)[:,0::self.DSR,:]###################
-            # print(input.shape, self.win_size//4)
 
             y, y_freq = self.model(input)
             TD, FD = self.model.criterion(y, input_data.float().to(self.device).detach(),
@@ -329,8 +322,6 @@ class Solver(object):
             cri = cri.detach().cpu().numpy()
             attens_energy.append(cri)
 
-            cri2 = rec_loss.detach().cpu().numpy()
-            attens_energy2.append(cri2)
             if mode_ == "segwise":
                 if labels.dim() == 3:
                     labels = labels.squeeze(-1)
@@ -343,18 +334,7 @@ class Solver(object):
         test_labels = np.array(test_labels)
         self.logger.info(f"test_energy{test_energy.mean()}")
         self.logger.info(f"test_energy: {test_energy.shape}, test_labels{test_labels.shape}")
-
-        attens_energy2 = np.concatenate(attens_energy2, axis=0).reshape(-1, self.output_c)
-        test_energy_2 = np.array(attens_energy2)
-        # plt.figure()
-        # plt.plot(test_energy, c="blue")
-        # plt.plot(test_labels.astype(int)* thresh, c="red")
-        # plt.savefig(f'test_energy_{self.dataset}.png')
-        # plt.figure()
-        # plt.plot(y[0,:,0].detach().cpu().numpy(), c="blue")
-        # plt.plot(input_data.float().to(self.device)[0,:,0].detach().cpu().numpy(), c="red")
-        # plt.savefig(f'recon2_{self.dataset}.png')
-
+        
         pred = (test_energy > thresh).astype(int)
 
         gt = test_labels.astype(int)

@@ -195,10 +195,11 @@ class Solver(object):
 
         if (epo % 10) == 0 or testing:
             pass
-            self.log.log_forecasting_vis(y_horizon_pred.cpu().detach().numpy(), y.cpu().detach().numpy(), name_ = f"{epo}" if not testing else "testing")
+            # self.log.log_forecasting_vis(y_horizon_pred.cpu().detach().numpy(), y.cpu().detach().numpy(), name_ = f"{epo}" if not testing else "testing")
         if testing:
-            all_mse = ((all_pred - all_y)**2)[:,-1,:]
-            self.log.log_forecasting_error_vis(all_mse)
+            pass
+            # all_mse = ((all_pred - all_y)**2)[:,-1,:]
+            # self.log.log_forecasting_error_vis(all_mse)
         MSE_ = F.mse_loss(all_pred,all_y).detach().cpu().item()
         MAE_ = F.l1_loss(all_pred,all_y).detach().cpu().item()
 
