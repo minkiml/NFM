@@ -45,5 +45,6 @@ do
       --start_lr 0.00035 \
       --description "_" \
       --gpu_dev 5 \
+      --patience 3 \
       --batch 1648 --batch_testing 6 --lr_ 0.0003
 done
