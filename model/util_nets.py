@@ -267,7 +267,7 @@ class Siren_block(nn.Module):
     def siren_initialization(self):
         for var, m in self.named_children():
             if var == "phi_init": 
-                m.apply(self.init_midLayers)
+                m.apply(self.init_firstLayer)
             elif var == "phi_mid":
                 self.dim_in = self.hidden_dim
                 m.apply(self.init_midLayers)

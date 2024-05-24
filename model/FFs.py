@@ -223,13 +223,13 @@ class INFF(nn.Module):
         f_x = self.phi_INFF(tc = temporal_loc, L=self.hypervar_INFF.L_span,dev = x.device)
         f_x = (self.norm_out(f_x) + conditional.detach()) # 1)
         f = self.hypervar_INFF.DFT_(f_x)
+        f = self.inff_scale_bias(f)
         f = self.cv_mlp(f)
      
         if self.hypervar_INFF.freq_span < self.hypervar_INFF.f_base:
             f = f[:,:self.hypervar_INFF.freq_span,:]
         _, F_, d_ = f.shape
         assert x.shape[1] == f.shape[1]
-        f = self.inff_scale_bias(f)
 
         x *=f
         return x

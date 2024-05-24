@@ -120,7 +120,7 @@ do
       --loss_type TFDR \
       --lamda 0.5 \
       --channel_dependence 0 \
-      --n_epochs 40 \
+      --n_epochs 30 \
       --scheduler 1 \
       --warm_up 0.2 \
       --final_lr 0.00005\
@@ -164,7 +164,7 @@ do
       --n_epochs 40 \
       --scheduler 1 \
       --warm_up 0.2 \
-      --final_lr 0.0001\
+      --final_lr 0.00005\
       --ref_lr 0.00015 \
       --start_lr 0.00005 \
       --description "" \
