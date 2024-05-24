@@ -59,8 +59,6 @@ for sr in 4 6;
 do
     pred_len=${pred_lens[$i]}
     look_back=${look_backs[$i]}
-    freq_span=${freq_spans[$i]}
-    std=${stds[$i]}
     half_look_back=$((look_back / ${sr}))
     half_pred_len=$((pred_len / ${sr}))
     python -u FC_main.py \
