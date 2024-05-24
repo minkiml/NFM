@@ -19,7 +19,7 @@ class NFM_general(nn.Module):
         self.projection_in2 = nn.Sequential(
                                            nn.Linear(self.hyper_var_nfm.C_, 
                                                      self.hyper_var_nfm.hidden_dim * self.hyper_var_nfm.proj_factor, 
-                                            bias = True),
+                                            bias = False),
                                             mul_omega(feature_dim = self.hyper_var_nfm.hidden_dim * self.hyper_var_nfm.proj_factor, 
                                             omega = 1,
                                             omega_learnable = False),
