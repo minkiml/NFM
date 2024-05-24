@@ -111,7 +111,7 @@ NFM works well on both pre-processed features (MFCC) and long raw waveform of 16
 ### Anomaly detection
 NFM, which is formulated into a context learning setup, shows effectiveness in anomaly detection task.
 
-<!-- ![Anomaly detection results](images/ad_result.PNG) -->
+![Anomaly detection results](images/ad_result.PNG)
 
 ## How to use NFM on your own dataset and task
 We provide a short and quick [demo](demo/simple_demo.ipynb) on how to set up NFM and apply it to one's own data and task.
