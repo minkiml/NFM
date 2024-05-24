@@ -45,7 +45,7 @@ class mixer_block(nn.Module):
         # FFN chnnel mixing
         self.channel_mixer = PositionwiseFeedForward(hidden_dim, hidden_dim * hidden_factor, 
                                                  dropout=dropout, 
-                                                 activation = "LeakyReLU", 
+                                                 activation = "ReLU", 
                                                  type_ = "linear",
                                                  n_slope = 0.04,
                                                  layer_id= layer_id,
