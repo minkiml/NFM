@@ -1,9 +1,10 @@
-# NFM: Neural Fourier Space Modelling for Time Series
+# Neural Fourier Modelling: A Highly Compact Approach to Time-Series Analysis
 
-This repository is the official implementation of "NFM: Neural Fourier Space Modelling for Time Series".
-<!-- [Neural Fourier Space Modelling for Time Series](link).  -->
+This repository is the official implementation of "Neural Fourier Modelling: A Highly Compact Approach to Time-Series Analysis
+".
+<!-- [Paper link](link).  -->
 
-*Neural Fourier Space Modelling (**NFM**) which models time series directly in the Fourier domain is **a compact yet powerful general solution** to a range of time series problems.*
+*Neural Fourier Modelling (**NFM**) which models time series directly in the Fourier domain is **a highly compact yet powerful general solution** to a range of time series problems.*
 
 ![Overall workflow](images/Framework.png)
 
