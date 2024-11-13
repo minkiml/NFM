@@ -126,5 +126,4 @@ If you have any questions about our work or this repo, please contact us: mkim33
 If you cite our work, 
 >📋  Pick a licence and describe how to contribute to your code repository.  -->
 <!-- 
-## Contact
-If you have any queries, please email us (mkim332@aucklanduni.ac.nz). -->
+
