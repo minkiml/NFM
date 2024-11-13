@@ -118,10 +118,6 @@ NFM, which is formulated into a context learning setup, shows effectiveness in a
 We provide a short and quick [demo](demo/simple_demo.ipynb) on how to set up NFM and apply it to one's own data and task.
 
 
-## Contact
-If you have any questions about our work or this repo, please contact us: mkim332@aucklanduni.ac.nz .
-
-
 <!-- ## Citation
 If you cite our work, 
 >📋  Pick a licence and describe how to contribute to your code repository.  -->
